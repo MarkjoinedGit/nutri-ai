@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
+import '../providers/user_provider.dart';
 import '../screens/chat_consultant_screen.dart';
 
 class ConversationsScreen extends StatefulWidget {
-  final String userId;
-
-  const ConversationsScreen({super.key, required this.userId});
+  const ConversationsScreen({super.key});
 
   @override
   State<ConversationsScreen> createState() => _ConversationsScreenState();
@@ -17,10 +16,13 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ChatProvider>(
-        context,
-        listen: false,
-      ).setUserId(widget.userId);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.currentUser != null) {
+        Provider.of<ChatProvider>(
+          context,
+          listen: false,
+        ).setUser(userProvider.currentUser!);
+      }
     });
   }
 
@@ -102,7 +104,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                               listen: false,
                             ),
                             child: ChatConsultantScreen(
-                              userId: widget.userId,
                               conversationId: conversation.id,
                             ),
                           ),
@@ -118,13 +119,18 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         backgroundColor: const Color(0xFFE07E02),
         child: const Icon(Icons.add),
         onPressed: () {
+          final chatProvider = Provider.of<ChatProvider>(
+            context,
+            listen: false,
+          );
+          chatProvider.startNewConversation();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder:
                   (context) => ChangeNotifierProvider.value(
-                    value: Provider.of<ChatProvider>(context, listen: false),
-                    child: ChatConsultantScreen(userId: widget.userId),
+                    value: chatProvider,
+                    child: const ChatConsultantScreen(),
                   ),
             ),
           );

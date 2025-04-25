@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
-import 'providers/chat_provider.dart'; // Add this import
+import 'providers/chat_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/calorie_tracking_provider.dart';
 
 void main() {
+  // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ChatProvider()),
-        // Add any other providers here if needed
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => CalorieTrackingProvider()),
       ],
       child: const NutriAI(),
     ),
@@ -57,17 +62,32 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // Using addPostFrameCallback to ensure the UI is built before we start loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLoginStatus();
+    });
   }
 
   Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    // Use try/catch to handle potential exceptions during auth check
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final isAuthenticated = await userProvider.loadUserFromPrefs();
 
-    setState(() {
-      _isAuthenticated = isLoggedIn;
-      _isLoading = false;
-    });
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = isAuthenticated;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = false;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -76,10 +96,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_isAuthenticated) {
-      return const DashboardScreen();
-    } else {
-      return const WelcomeScreen();
-    }
+    return _isAuthenticated ? const DashboardScreen() : const WelcomeScreen();
   }
 }

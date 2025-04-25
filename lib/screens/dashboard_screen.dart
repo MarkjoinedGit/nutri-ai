@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';  // Add this import
-import '../services/auth_service.dart';
-import '../providers/chat_provider.dart';  // Add this import
 import './chat_consultant_screen.dart';
+import './recipe_recognition_screen.dart';
+import './calorie_tracking_screen.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
+import '../providers/user_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,40 +16,47 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   static const Color customOrange = Color(0xFFE07E02);
-  String? _userId;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserId();
-  }
-
-  Future<void> _loadUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userId = prefs.getString('userId');
-    });
+    // User data is already loaded via UserProvider
   }
 
   Future<void> _logout() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final authService = AuthService();
-      final prefs = await SharedPreferences.getInstance();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-      final userId = prefs.getString('userId');
-      if (userId != null) {
-        await authService.logout(userId);
+      if (userProvider.currentUser != null) {
+        await authService.logout(userProvider.currentUser!.id);
       }
 
-      await prefs.clear();
+      // Clear user data from provider
+      await userProvider.clearUser();
 
+      // Check if widget is still mounted before using BuildContext
       if (!mounted) return;
+
       Navigator.pushReplacementNamed(context, '/welcome');
     } catch (e) {
+      // Check if widget is still mounted before using BuildContext
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error during logout: ${e.toString()}')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -59,38 +67,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _navigateToFeature(String feature) {
-    if (_userId == null) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    if (!userProvider.isLoggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in. Please log in again.')),
+        const SnackBar(
+          content: Text('User not logged in. Please log in again.'),
+        ),
       );
       return;
     }
 
     switch (feature) {
       case 'Chat Consultation':
-        // Wrap the ChatConsultantScreen with ChangeNotifierProvider
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChangeNotifierProvider(
-              create: (_) => ChatProvider(),
-              child: ChatConsultantScreen(
-                userId: _userId!,
-              ),
-            ),
+            builder: (context) => const ChatConsultantScreen(),
+          ),
+        );
+        break;
+      case 'Recipe Recognition':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const RecipeRecognitionScreen(),
+          ),
+        );
+        break;
+      case 'Calorie Tracking':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CalorieTrackingScreen(),
           ),
         );
         break;
       default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$feature feature coming soon')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$feature feature coming soon')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Rest of the code remains the same
+    // Access user data from provider
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.currentUser;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -100,113 +125,154 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 8),
             const Text(
               'NutriAI',
-              style: TextStyle(color: customOrange, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: customOrange,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black87),
-            onPressed: _logout,
-          ),
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: customOrange,
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.black87),
+              onPressed: _logout,
+            ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.chat_bubble_outline,
-                    title: 'Chat\nConsultation',
-                    backgroundColor: const Color(0xFFF5E6D0),
-                    iconColor: Colors.black,
-                    onTap: () => _navigateToFeature('Chat Consultation'),
-                  ),
+      body:
+          user == null
+              ? const Center(child: Text('No user data available'))
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Welcome header with user name
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        'Welcome, ${user.name}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // User role badge
+                    if (user.isDoctor)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: customOrange.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Healthcare Professional',
+                            style: TextStyle(
+                              color: customOrange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Feature cards with updated colors and without Food Substitutions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.chat_bubble_outline,
+                            title: 'Chat\nConsultation',
+                            backgroundColor: const Color(0xFFF5E6D0),
+                            iconColor: Colors.black,
+                            onTap:
+                                () => _navigateToFeature('Chat Consultation'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.camera_alt_outlined,
+                            title: 'Recipe\nRecognition',
+                            backgroundColor: Colors.grey.shade300,
+                            iconColor: Colors.black,
+                            onTap:
+                                () => _navigateToFeature('Recipe Recognition'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.analytics_outlined,
+                            title: 'Calorie Tracking',
+                            backgroundColor: customOrange,
+                            iconColor: Colors.white,
+                            onTap: () => _navigateToFeature('Calorie Tracking'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.favorite_border,
+                            title: 'Health\nMonitoring',
+                            backgroundColor: const Color(0xFFF5E6D0),
+                            iconColor: Colors.black,
+                            onTap:
+                                () => _navigateToFeature('Health Monitoring'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.notifications_outlined,
+                            title: 'Reminders',
+                            backgroundColor: Colors.grey.shade300,
+                            iconColor: Colors.black,
+                            onTap: () => _navigateToFeature('Reminders'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildFeatureCard(
+                            icon: Icons.restaurant_outlined,
+                            title: 'Meal Plans',
+                            backgroundColor: customOrange,
+                            iconColor: Colors.white,
+                            onTap: () => _navigateToFeature('Meal Plans'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.camera_alt_outlined,
-                    title: 'Recipe\nRecognition',
-                    backgroundColor: Colors.grey.shade300,
-                    iconColor: Colors.black,
-                    onTap: () => _navigateToFeature('Recipe Recognition'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.analytics_outlined,
-                    title: 'Calorie Tracking',
-                    backgroundColor: customOrange,
-                    iconColor: Colors.white,
-                    onTap: () => _navigateToFeature('Calorie Tracking'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.sync_alt,
-                    title: 'Food\nSubstitutions',
-                    backgroundColor: const Color(0xFFF5E6D0),
-                    iconColor: Colors.black,
-                    onTap: () => _navigateToFeature('Food Substitutions'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.favorite_border,
-                    title: 'Health\nMonitoring',
-                    backgroundColor: Colors.grey.shade300,
-                    iconColor: Colors.black,
-                    onTap: () => _navigateToFeature('Health Monitoring'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.notifications_outlined,
-                    title: 'Reminders',
-                    backgroundColor: customOrange,
-                    iconColor: Colors.white,
-                    onTap: () => _navigateToFeature('Reminders'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFeatureCard(
-                    icon: Icons.restaurant_outlined,
-                    title: 'Meal Plans',
-                    backgroundColor: const Color(0xFFF5E6D0),
-                    iconColor: Colors.black,
-                    onTap: () => _navigateToFeature('Meal Plans'),
-                  ),
-                ),
-                const Expanded(child: SizedBox()),
-              ],
-            ),
-          ],
-        ),
-      ),
+              ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -250,11 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 30,
-              color: iconColor,
-            ),
+            Icon(icon, size: 30, color: iconColor),
             const SizedBox(height: 12),
             Text(
               title,

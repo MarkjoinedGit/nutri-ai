@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
+import '../providers/user_provider.dart';
 import '../widgets/chat_message_widget.dart';
-import '../screens/conversation_screen.dart'; // Add this import
+import '../screens/conversation_screen.dart';
 
 class ChatConsultantScreen extends StatefulWidget {
-  final String userId;
   final String? conversationId;
 
   const ChatConsultantScreen({
     super.key,
-    required this.userId,
     this.conversationId,
   });
 
@@ -28,11 +27,15 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<ChatProvider>(context, listen: false);
-      provider.setUserId(widget.userId);
-
-      if (widget.conversationId != null) {
-        provider.selectConversation(widget.conversationId!);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      
+      if (userProvider.currentUser != null) {
+        chatProvider.setUser(userProvider.currentUser!);
+        
+        if (widget.conversationId != null) {
+          chatProvider.selectConversation(widget.conversationId!);
+        }
       }
     });
   }
@@ -72,13 +75,14 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     }
   }
 
-  // Add this method to open conversation history
+  // Open conversation history
   void _openConversationHistory() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider.value(value: Provider.of<ChatProvider>(context, listen: false),
-          child: ConversationsScreen(userId: widget.userId),
+        builder: (context) => ChangeNotifierProvider.value(
+          value: Provider.of<ChatProvider>(context, listen: false),
+          child: ConversationsScreen(),
         ),
       ),
     );

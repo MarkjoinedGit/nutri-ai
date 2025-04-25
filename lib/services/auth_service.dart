@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/user_model.dart';
+import '../config/api_config.dart';
 
 class AuthService {
-  // Replace with your actual API URL
-  final String baseUrl = 'https://zep.hcmute.fit/7800'; // For Android emulator
-  // Use 'http://localhost:8000' for iOS simulator or web
+  final String baseUrl = ApiConfig.baseUrl;
 
-  Future<Map<String, dynamic>> register(
+  Future<User> register(
     String name,
     String email,
     String password,
@@ -25,12 +25,15 @@ class AuthService {
       );
 
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return {
-          'userId': data['id'] ?? '',
-        };
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return User(
+          id: data['id'] ?? '',
+          name: name,
+          email: email,
+          isDoctor: isDoctor,
+        );
       } else {
-        final error = jsonDecode(response.body);
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
         throw Exception(error['detail'] ?? 'Registration failed');
       }
     } catch (e) {
@@ -41,27 +44,24 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<User> login(String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {
-          'userId': data['user']['_id'] ?? '',
-          'name': data['user']['name'] ?? '',
-          'email': data['user']['email'] ?? '',
-          'isDoctor': data['user']['isDoctor'] ?? false,
-        };
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return User(
+          id: data['user']['_id'] ?? '',
+          name: data['user']['name'] ?? '',
+          email: data['user']['email'] ?? '',
+          isDoctor: data['user']['isDoctor'] ?? false,
+        );
       } else {
-        final error = jsonDecode(response.body);
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
         throw Exception(error['detail'] ?? 'Login failed');
       }
     } catch (e) {
@@ -77,9 +77,7 @@ class AuthService {
       final response = await http.post(
         Uri.parse('$baseUrl/users/logout'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          '_id': userId,
-        }),
+        body: jsonEncode({'_id': userId}),
       );
 
       return response.statusCode == 200;

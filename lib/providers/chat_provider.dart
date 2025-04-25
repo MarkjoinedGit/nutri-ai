@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chat_message_model.dart';
 import '../models/conversation_model.dart';
 import '../services/api_service.dart';
+import '../models/user_model.dart';
 
 class ChatProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -9,7 +10,7 @@ class ChatProvider extends ChangeNotifier {
   List<Conversation> _conversations = [];
   List<ChatMessage> _currentConversationMessages = [];
   String? _currentConversationId;
-  String? _userId;
+  User? _currentUser;
   bool _isLoading = false;
 
   // Getters
@@ -18,27 +19,33 @@ class ChatProvider extends ChangeNotifier {
   String? get currentConversationId => _currentConversationId;
   bool get isLoading => _isLoading;
 
-  // Set user ID
-  void setUserId(String userId) {
-    _userId = userId;
+  // Set user
+  void setUser(User user) {
+    _currentUser = user;
     loadConversations();
+  }
+
+  //Start a new conversation
+  void startNewConversation() {
+    _currentConversationId = null;
+    _currentConversationMessages.clear();
+    notifyListeners();
   }
 
   // Load user conversations
   Future<void> loadConversations() async {
-    if (_userId == null) return;
+    if (_currentUser == null) return;
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      _conversations = await _apiService.getUserConversations(_userId!);
+      _conversations = await _apiService.getUserConversations(_currentUser!.id);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading conversations: $e');
     }
   }
 
@@ -57,14 +64,12 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      print('Error loading chat messages: $e');
     }
   }
 
   // Send a message in current conversation
-  // Send a message in current conversation
   Future<void> sendMessage(String message) async {
-    if (_userId == null) return;
+    if (_currentUser == null) return;
 
     try {
       // Create temporary user message to display immediately
@@ -93,7 +98,7 @@ class ChatProvider extends ChangeNotifier {
       } else {
         // Start a new conversation
         responseMessage = await _apiService.startNewConversation(
-          userId: _userId!,
+          userId: _currentUser!.id,
           userMessage: message,
         );
 
@@ -103,7 +108,7 @@ class ChatProvider extends ChangeNotifier {
         // Add the new conversation to our list
         Conversation newConversation = Conversation(
           id: responseMessage.conversationId,
-          userId: _userId!,
+          userId: _currentUser!.id,
           topic: "New Conversation", // Backend might set a different topic
         );
         _conversations.add(newConversation);
@@ -120,7 +125,6 @@ class ChatProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      print('Error sending message: $e');
       // Handle error - maybe update the temporary message to show an error state
     }
   }
