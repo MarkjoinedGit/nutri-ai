@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/user_provider.dart';
 import '../services/recipe_service.dart';
 import '../models/nutrition_info_model.dart';
 import '../utils/image_validation_util.dart';
 import '../providers/calorie_tracking_provider.dart';
+import '../providers/user_provider.dart';
 import '../widgets/daily_nutrition_summary_widget.dart';
 import '../widgets/meal_section_widget.dart';
 import '../widgets/food_analysis_widget.dart';
+import '../widgets/error_notification_widget.dart';
 
 class CalorieTrackingScreen extends StatefulWidget {
   const CalorieTrackingScreen({super.key});
@@ -24,7 +25,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   File? _image;
   bool _isAnalyzing = false;
   NutritionInfo? _nutritionInfo;
-  String? _errorMessage;
   DateTime _selectedDate = DateTime.now();
 
   // Colors
@@ -34,6 +34,11 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   void initState() {
     super.initState();
     _loadDailyData();
+  }
+
+  void _showError(String errorMessage) {
+    // Use the ErrorNotificationManager to show the error
+    ErrorNotificationManager.showError(context, errorMessage);
   }
 
   Future<void> _loadDailyData() async {
@@ -93,24 +98,19 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
       // Validate if file is an image
       if (!imageFile.isValidImage) {
-        setState(() {
-          _errorMessage = 'The selected file is not a valid image.';
-        });
+        _showError('The selected file is not a valid image.');
         return;
       }
 
       setState(() {
         _image = imageFile;
         _nutritionInfo = null;
-        _errorMessage = null;
       });
 
       // Analyze food image
       _analyzeImage();
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to select image: ${e.toString()}';
-      });
+      _showError('Failed to select image: ${e.toString()}');
     }
   }
 
@@ -119,15 +119,12 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (!userProvider.isLoggedIn || userProvider.currentUser == null) {
-      setState(() {
-        _errorMessage = 'User not logged in. Please log in again.';
-      });
+      _showError('User not logged in. Please log in again.');
       return;
     }
 
     setState(() {
       _isAnalyzing = true;
-      _errorMessage = null;
     });
 
     final recipeService = RecipeService();
@@ -146,9 +143,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Error analyzing nutrition: ${e.toString()}';
           _isAnalyzing = false;
         });
+        _showError('Error analyzing nutrition: ${e.toString()}');
       }
     }
   }
@@ -350,6 +347,45 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
               const SizedBox(height: 24),
 
+              // Add Food Button
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: customOrange,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: _showAddFoodDialog,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Add Food with Camera',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Loading indicator
+              if (_isAnalyzing) ...[
+                const SizedBox(height: 24),
+                const Center(
+                  child: Column(
+                    children: [
+                      CircularProgressIndicator(color: customOrange),
+                      SizedBox(height: 16),
+                      Text('Analyzing food image...'),
+                    ],
+                  ),
+                ),
+              ],
+
               // Meal sections
               MealSectionWidget(
                 title: 'Breakfast',
@@ -374,61 +410,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
                 items: calorieProvider.snackItems,
                 onRemove: (index) => _removeItem('snack', index),
               ),
-
-              const SizedBox(height: 24),
-
-              // Add Food Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: customOrange,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: _showAddFoodDialog,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(
-                      'Add Food with Camera',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Error message if any
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red.shade800),
-                  ),
-                ),
-              ],
-
-              // Loading indicator
-              if (_isAnalyzing) ...[
-                const SizedBox(height: 24),
-                const Center(
-                  child: Column(
-                    children: [
-                      CircularProgressIndicator(color: customOrange),
-                      SizedBox(height: 16),
-                      Text('Analyzing food image...'),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
         ),
