@@ -25,7 +25,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   File? _image;
   bool _isAnalyzing = false;
   NutritionInfo? _nutritionInfo;
-  String? _errorMessage;
   DateTime _selectedDate = DateTime.now();
   String _currentMealType = ''; // Track which meal is being added
 
