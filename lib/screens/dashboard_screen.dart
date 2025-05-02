@@ -82,9 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Chat Consultation':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ChatConsultantScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ChatConsultantScreen()),
         );
         break;
       case 'Recipe Recognition':
