@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../providers/user_provider.dart';
-import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,7 +14,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   // State variables
   bool _isLoading = false;
   bool _isPasswordVisible = false;
@@ -24,52 +22,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isDoctor = false;
   String? _errorMessage;
 
-  // Using static constants for colors and styles to avoid recreation
+  // Using a static const to avoid recreating the color in every build
   static const Color customOrange = Color(0xFFE07E02);
-  
-  // Predefined text styles
+
+  // Pre-defined styles to avoid recreating them in build method
   static const TextStyle headingStyle = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: customOrange,
     letterSpacing: 0.5,
   );
-  
+
   static const TextStyle subtitleStyle = TextStyle(
-    fontSize: 16, 
-    color: Colors.black54
+    fontSize: 16,
+    color: Colors.black54,
   );
-  
+
   static const TextStyle buttonTextStyle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
   );
-  
-  // Predefined input decoration to avoid duplication
-  InputDecoration _getInputDecoration({
-    required String label,
-    required String hint,
-    required IconData prefixIcon,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: Icon(prefixIcon),
-      suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: customOrange),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -93,7 +65,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
     }
-    final emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegExp = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     if (!emailRegExp.hasMatch(value)) {
       return 'Please enter a valid email';
     }
@@ -120,11 +94,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return null;
   }
 
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            // Set constraints to prevent overflow
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
+            title: Wrap(
+              spacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: const [
+                Icon(Icons.check_circle, color: customOrange, size: 28),
+                Flexible(
+                  child: Text(
+                    "Registration Successful",
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Your account has been created successfully. Please sign in with your credentials.",
+              style: TextStyle(color: Colors.black54, fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to login screen
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: const Text(
+                  "Sign In",
+                  style: TextStyle(
+                    color: customOrange,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
   Future<void> _register() async {
     // Validate first to avoid unnecessary operations
     if (!_formKey.currentState!.validate()) return;
-    
-    // Update state once
+
+    // Only update state once
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -134,33 +164,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final authService = AuthService();
-      final user = await authService.register(
+      await authService.register(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
         _isDoctor,
       );
 
-      // Check if widget is still mounted
+      // Only proceed if widget is still mounted
       if (!mounted) return;
 
-      // Store user data
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      await userProvider.saveUserToPrefs(user);
+      setState(() {
+        _isLoading = false;
+      });
 
-      // Navigate only if still mounted
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      }
+      // Show success dialog instead of navigating directly to dashboard
+      _showSuccessDialog();
     } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
           _isLoading = false;
         });
       }
@@ -169,6 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Use const for widgets that don't change
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -185,7 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Form(
             key: _formKey,
             child: CustomScrollView(
-              // Using CustomScrollView for better performance
+              // Using CustomScrollView with SliverList for better performance
               slivers: [
                 SliverList(
                   delegate: SliverChildListDelegate([
@@ -250,10 +274,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildNameField() {
     return TextFormField(
       controller: _nameController,
-      decoration: _getInputDecoration(
-        label: "Full Name",
-        hint: "Enter your full name",
-        prefixIcon: Icons.person_outline,
+      decoration: InputDecoration(
+        labelText: "Full Name",
+        hintText: "Enter your full name",
+        prefixIcon: const Icon(Icons.person_outline),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: customOrange),
+        ),
       ),
       validator: _validateName,
     );
@@ -263,10 +296,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      decoration: _getInputDecoration(
-        label: "Email",
-        hint: "Enter your email",
-        prefixIcon: Icons.email_outlined,
+      decoration: InputDecoration(
+        labelText: "Email",
+        hintText: "Enter your email",
+        prefixIcon: const Icon(Icons.email_outlined),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: customOrange),
+        ),
       ),
       validator: _validateEmail,
     );
@@ -276,10 +318,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
-      decoration: _getInputDecoration(
-        label: "Password",
-        hint: "Enter your password",
-        prefixIcon: Icons.lock_outline,
+      decoration: InputDecoration(
+        labelText: "Password",
+        hintText: "Enter your password",
+        prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
             _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -290,6 +332,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             });
           },
         ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: customOrange),
+        ),
       ),
       validator: _validatePassword,
     );
@@ -299,10 +350,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: !_isConfirmPasswordVisible,
-      decoration: _getInputDecoration(
-        label: "Confirm Password",
-        hint: "Confirm your password",
-        prefixIcon: Icons.lock_outline,
+      decoration: InputDecoration(
+        labelText: "Confirm Password",
+        hintText: "Confirm your password",
+        prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
             _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -313,6 +364,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             });
           },
         ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: customOrange),
+        ),
       ),
       validator: _validateConfirmPassword,
     );
@@ -322,10 +382,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return SwitchListTile(
       title: const Text(
         "Register as a Doctor",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
       subtitle: const Text(
         "Turn on if you are a healthcare professional",
@@ -361,19 +418,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderRadius: BorderRadius.circular(15),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text(
-                "Register",
-                style: buttonTextStyle,
-              ),
+        child:
+            _isLoading
+                ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : const Text("Register", style: buttonTextStyle),
       ),
     );
   }

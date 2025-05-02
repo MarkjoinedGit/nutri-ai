@@ -96,9 +96,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.saveUserToPrefs(user);
 
-      // Navigate only if still mounted
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
