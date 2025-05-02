@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../providers/user_provider.dart';
 import '../services/recipe_service.dart';
 import '../models/nutrition_info_model.dart';
 import '../utils/image_validation_util.dart';
 import '../providers/calorie_tracking_provider.dart';
-import '../providers/user_provider.dart';
 import '../widgets/daily_nutrition_summary_widget.dart';
 import '../widgets/meal_section_widget.dart';
 import '../widgets/food_analysis_widget.dart';
@@ -25,7 +25,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   File? _image;
   bool _isAnalyzing = false;
   NutritionInfo? _nutritionInfo;
+  String? _errorMessage;
   DateTime _selectedDate = DateTime.now();
+  String _currentMealType = ''; // Track which meal is being added
 
   // Colors
   static const Color customOrange = Color(0xFFE07E02);
@@ -36,9 +38,8 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     _loadDailyData();
   }
 
-  void _showError(String errorMessage) {
-    // Use the ErrorNotificationManager to show the error
-    ErrorNotificationManager.showError(context, errorMessage);
+  void _showError(String message) {
+    ErrorNotificationManager.showError(context, message);
   }
 
   Future<void> _loadDailyData() async {
@@ -85,8 +86,13 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     }
   }
 
-  Future<void> _getImage(ImageSource source) async {
+  Future<void> _getImage(ImageSource source, String mealType) async {
     try {
+      // Store which meal we're adding to
+      setState(() {
+        _currentMealType = mealType;
+      });
+
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 80,
@@ -98,7 +104,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
       // Validate if file is an image
       if (!imageFile.isValidImage) {
-        _showError('The selected file is not a valid image.');
+        setState(() {
+          _showError('The selected file is not a valid image.');
+        });
         return;
       }
 
@@ -110,7 +118,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       // Analyze food image
       _analyzeImage();
     } catch (e) {
-      _showError('Failed to select image: ${e.toString()}');
+      setState(() {
+        _showError('Failed to select image: ${e.toString()}');
+      });
     }
   }
 
@@ -119,7 +129,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (!userProvider.isLoggedIn || userProvider.currentUser == null) {
-      _showError('User not logged in. Please log in again.');
+      setState(() {
+        _showError('User not logged in. Please log in again.');
+      });
       return;
     }
 
@@ -137,8 +149,8 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
           _isAnalyzing = false;
         });
 
-        // Show meal selection dialog
-        _showMealSelectionDialog();
+        // Directly show food analysis without meal selection
+        _showFoodAnalysisDialog();
       }
     } catch (e) {
       if (mounted) {
@@ -150,7 +162,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     }
   }
 
-  void _showMealSelectionDialog() {
+  void _showFoodAnalysisDialog() {
     if (_nutritionInfo == null) return;
 
     showDialog(
@@ -158,7 +170,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Add to which meal?'),
+          title: Text('Add to ${_getMealTypeDisplayName(_currentMealType)}?'),
           content: FoodAnalysisWidget(nutritionInfo: _nutritionInfo!),
           actions: [
             TextButton(
@@ -168,30 +180,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
               },
             ),
             TextButton(
-              child: const Text('Breakfast'),
+              child: const Text('Add Food'),
               onPressed: () {
-                _saveMealData('breakfast');
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Lunch'),
-              onPressed: () {
-                _saveMealData('lunch');
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Dinner'),
-              onPressed: () {
-                _saveMealData('dinner');
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Snack'),
-              onPressed: () {
-                _saveMealData('snack');
+                _saveMealData(_currentMealType);
                 Navigator.of(context).pop();
               },
             ),
@@ -199,6 +190,21 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
         );
       },
     );
+  }
+
+  String _getMealTypeDisplayName(String mealType) {
+    switch (mealType) {
+      case 'breakfast':
+        return 'Breakfast';
+      case 'lunch':
+        return 'Lunch';
+      case 'dinner':
+        return 'Dinner';
+      case 'snack':
+        return 'Snacks';
+      default:
+        return mealType;
+    }
   }
 
   void _saveMealData(String mealType) async {
@@ -226,7 +232,9 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Food added to $mealType successfully!'),
+            content: Text(
+              'Food added to ${_getMealTypeDisplayName(mealType)} successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -234,12 +242,13 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     }
   }
 
-  void _showAddFoodDialog() {
+  // This method is called when the user taps the "+" button for a meal
+  void _showAddFoodOptionsForMeal(String mealType) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Add Food'),
+          title: Text('Add Food to ${_getMealTypeDisplayName(mealType)}'),
           content: const Text('Choose how you want to add food'),
           actions: [
             TextButton(
@@ -252,14 +261,14 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
               child: const Text('Camera'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _getImage(ImageSource.camera);
+                _getImage(ImageSource.camera, mealType);
               },
             ),
             TextButton(
               child: const Text('Gallery'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _getImage(ImageSource.gallery);
+                _getImage(ImageSource.gallery, mealType);
               },
             ),
           ],
@@ -347,31 +356,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
               const SizedBox(height: 24),
 
-              // Add Food Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: customOrange,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: _showAddFoodDialog,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(
-                      'Add Food with Camera',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
               // Loading indicator
               if (_isAnalyzing) ...[
                 const SizedBox(height: 24),
@@ -386,29 +370,33 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
                 ),
               ],
 
-              // Meal sections
+              // Meal sections with individual add buttons
               MealSectionWidget(
                 title: 'Breakfast',
                 items: calorieProvider.breakfastItems,
                 onRemove: (index) => _removeItem('breakfast', index),
+                onAddPressed: () => _showAddFoodOptionsForMeal('breakfast'),
               ),
               const SizedBox(height: 16),
               MealSectionWidget(
                 title: 'Lunch',
                 items: calorieProvider.lunchItems,
                 onRemove: (index) => _removeItem('lunch', index),
+                onAddPressed: () => _showAddFoodOptionsForMeal('lunch'),
               ),
               const SizedBox(height: 16),
               MealSectionWidget(
                 title: 'Dinner',
                 items: calorieProvider.dinnerItems,
                 onRemove: (index) => _removeItem('dinner', index),
+                onAddPressed: () => _showAddFoodOptionsForMeal('dinner'),
               ),
               const SizedBox(height: 16),
               MealSectionWidget(
                 title: 'Snacks',
                 items: calorieProvider.snackItems,
                 onRemove: (index) => _removeItem('snack', index),
+                onAddPressed: () => _showAddFoodOptionsForMeal('snack'),
               ),
             ],
           ),

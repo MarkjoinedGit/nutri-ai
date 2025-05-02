@@ -5,6 +5,7 @@ class MealSectionWidget extends StatelessWidget {
   final String title;
   final List<NutritionInfo> items;
   final Function(int) onRemove;
+  final VoidCallback onAddPressed; // New callback for add button
   static const Color customOrange = Color(0xFFE07E02);
 
   const MealSectionWidget({
@@ -12,6 +13,7 @@ class MealSectionWidget extends StatelessWidget {
     required this.title,
     required this.items,
     required this.onRemove,
+    required this.onAddPressed, // Added required parameter
   });
 
   double _calculateMealCalories() {
@@ -71,19 +73,33 @@ class MealSectionWidget extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  '${_calculateMealCalories().toStringAsFixed(0)} kcal',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: customOrange,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${_calculateMealCalories().toStringAsFixed(0)} kcal',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: customOrange,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Add button for the meal section
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: customOrange,
+                      ),
+                      tooltip: 'Add food to $title',
+                      onPressed: onAddPressed,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           if (items.isEmpty)
             const Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
               child: Text(
                 'No items added yet',
                 style: TextStyle(color: Colors.grey),

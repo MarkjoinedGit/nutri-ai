@@ -17,7 +17,6 @@ class FoodAnalysisWidget extends StatelessWidget {
       children: [
         NutritionInfoWidget(nutritionInfo: nutritionInfo),
         const SizedBox(height: 16),
-        const Text('Select a meal to add this food to:'),
       ],
     );
   }
