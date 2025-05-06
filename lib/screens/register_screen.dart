@@ -15,17 +15,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // State variables
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isDoctor = false;
   String? _errorMessage;
 
-  // Using a static const to avoid recreating the color in every build
   static const Color customOrange = Color(0xFFE07E02);
 
-  // Pre-defined styles to avoid recreating them in build method
   static const TextStyle headingStyle = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
@@ -45,7 +42,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is disposed
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -53,7 +49,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // Validation functions - moved out of build method
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your name';
@@ -103,7 +98,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            // Set constraints to prevent overflow
             contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 20,
@@ -133,7 +127,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // Navigate to login screen
                   Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: const Text(
@@ -151,10 +144,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    // Validate first to avoid unnecessary operations
     if (!_formKey.currentState!.validate()) return;
 
-    // Only update state once
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -171,14 +162,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _isDoctor,
       );
 
-      // Only proceed if widget is still mounted
       if (!mounted) return;
 
       setState(() {
         _isLoading = false;
       });
 
-      // Show success dialog instead of navigating directly to dashboard
       _showSuccessDialog();
     } catch (e) {
       if (mounted) {
@@ -192,7 +181,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use const for widgets that don't change
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -209,7 +197,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Form(
             key: _formKey,
             child: CustomScrollView(
-              // Using CustomScrollView with SliverList for better performance
               slivers: [
                 SliverList(
                   delegate: SliverChildListDelegate([
@@ -221,7 +208,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: subtitleStyle,
                     ),
                     const SizedBox(height: 30),
-                    // Error message (conditionally shown)
                     if (_errorMessage != null) _buildErrorMessage(),
                     if (_errorMessage != null) const SizedBox(height: 20),
                     _buildNameField(),
@@ -247,7 +233,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Extracted widgets for better readability and performance
   Widget _buildErrorMessage() {
     return Container(
       padding: const EdgeInsets.all(12),

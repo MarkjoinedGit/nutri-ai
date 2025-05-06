@@ -39,7 +39,6 @@ class ChatMessageWidget extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, color: Colors.white),
                 )
                 : MarkdownBody(
-                  // 👈 Markdown cho tin nhắn bot
                   data: text,
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(fontSize: 16, color: Colors.black87),
@@ -56,7 +55,6 @@ class ChatMessageWidget extends StatelessWidget {
   }
 }
 
-// Separated the typing indicator into its own stateful widget
 class TypingIndicator extends StatefulWidget {
   const TypingIndicator({super.key});
 
@@ -95,7 +93,6 @@ class _TypingIndicatorState extends State<TypingIndicator>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        // Calculate a phase offset based on the dot index
         final double phaseOffset = index * 0.2;
         final double animationValue =
             ((_controller.value + phaseOffset) % 1.0) < 0.5 ? 0.3 : 0.7;

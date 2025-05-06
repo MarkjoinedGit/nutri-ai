@@ -26,9 +26,8 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   bool _isAnalyzing = false;
   NutritionInfo? _nutritionInfo;
   DateTime _selectedDate = DateTime.now();
-  String _currentMealType = ''; // Track which meal is being added
+  String _currentMealType = ''; 
 
-  // Colors
   static const Color customOrange = Color(0xFFE07E02);
 
   @override
@@ -57,7 +56,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    // Dynamic date range: from 5 years ago to 1 year in the future
     final DateTime now = DateTime.now();
     final DateTime firstDate = DateTime(now.year - 5);
     final DateTime lastDate = DateTime(now.year + 1, 12, 31);
@@ -87,7 +85,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
   Future<void> _getImage(ImageSource source, String mealType) async {
     try {
-      // Store which meal we're adding to
       setState(() {
         _currentMealType = mealType;
       });
@@ -101,7 +98,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
       final imageFile = File(pickedFile.path);
 
-      // Validate if file is an image
       if (!imageFile.isValidImage) {
         setState(() {
           _showError('The selected file is not a valid image.');
@@ -114,7 +110,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
         _nutritionInfo = null;
       });
 
-      // Analyze food image
       _analyzeImage();
     } catch (e) {
       setState(() {
@@ -148,7 +143,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
           _isAnalyzing = false;
         });
 
-        // Directly show food analysis without meal selection
         _showFoodAnalysisDialog();
       }
     } catch (e) {
@@ -241,7 +235,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     }
   }
 
-  // This method is called when the user taps the "+" button for a meal
   void _showAddFoodOptionsForMeal(String mealType) {
     showDialog(
       context: context,
@@ -329,7 +322,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Date selector
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
@@ -348,14 +340,12 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
               const SizedBox(height: 16),
 
-              // Daily totals card
               DailyNutritionSummaryWidget(
                 dailyTotal: calorieProvider.dailyTotal,
               ),
 
               const SizedBox(height: 24),
 
-              // Loading indicator
               if (_isAnalyzing) ...[
                 const SizedBox(height: 24),
                 const Center(
@@ -369,7 +359,6 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
                 ),
               ],
 
-              // Meal sections with individual add buttons
               MealSectionWidget(
                 title: 'Breakfast',
                 items: calorieProvider.breakfastItems,

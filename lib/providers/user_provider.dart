@@ -11,18 +11,15 @@ class UserProvider extends ChangeNotifier {
   
   bool get isDoctor => _currentUser?.isDoctor ?? false;
 
-  // Load user data from SharedPreferences
   Future<bool> loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Check if user is logged in
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     if (!isLoggedIn) {
       _currentUser = null;
       return false;
     }
 
-    // Get user data from SharedPreferences
     _currentUser = User(
       id: prefs.getString('userId') ?? '',
       name: prefs.getString('name') ?? '',
@@ -34,7 +31,6 @@ class UserProvider extends ChangeNotifier {
     return _currentUser!.isValid;
   }
 
-  // Save user data to SharedPreferences
   Future<void> saveUserToPrefs(User user) async {
     final prefs = await SharedPreferences.getInstance();
     
@@ -48,13 +44,11 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Set current user
   void setUser(User user) {
     _currentUser = user;
     notifyListeners();
   }
 
-  // Clear user data (logout)
   Future<void> clearUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

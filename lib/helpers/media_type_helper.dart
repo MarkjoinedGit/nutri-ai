@@ -1,6 +1,5 @@
 import 'package:http_parser/http_parser.dart';
 
-// Extension method to parse MIME type string to MediaType object
 extension on String {
   MediaType toMediaType() {
     final parts = split('/');
@@ -11,7 +10,6 @@ extension on String {
   }
 }
 
-// Helper function to parse MIME types
 MediaType parse(String mimeType) {
   return mimeType.toMediaType();
 }

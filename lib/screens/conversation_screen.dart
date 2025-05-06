@@ -26,14 +26,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     });
   }
 
-  // Navigate back to chat consultant screen
   void _navigateToChatConsultant() {
-    // If we're viewing conversation history while already in a chat,
-    // just return to that chat without creating a new screen
     Navigator.pop(context);
   }
 
-  // Show confirmation dialog before deleting a conversation
   void _confirmDeleteConversation(BuildContext context, String conversationId) {
     showDialog(
       context: context,

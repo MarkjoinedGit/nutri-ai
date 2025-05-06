@@ -15,15 +15,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // State variables
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   String? _errorMessage;
 
-  // Using a static const to avoid recreating the color in every build
   static const Color customOrange = Color(0xFFE07E02);
 
-  // Pre-defined styles to avoid recreating them in build method
   static const TextStyle headingStyle = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
@@ -48,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Email validation helper - moved out of build method
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
@@ -62,7 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  // Password validation helper - moved out of build method
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your password';
@@ -71,10 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    // Validate first to avoid unnecessary operations
     if (!_formKey.currentState!.validate()) return;
 
-    // Only update state once
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -89,10 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
 
-      // Only proceed if widget is still mounted
       if (!mounted) return;
 
-      // Store user data in provider
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.saveUserToPrefs(user);
 
@@ -110,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } finally {
-      // Update loading state if still mounted
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -121,7 +111,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use const for widgets that don't change
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -138,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Form(
             key: _formKey,
             child: CustomScrollView(
-              // Using CustomScrollView with SliverList for better performance
               slivers: [
                 SliverList(
                   delegate: SliverChildListDelegate([
@@ -150,7 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: subtitleStyle,
                     ),
                     const SizedBox(height: 40),
-                    // Error message (conditionally shown)
                     if (_errorMessage != null) _buildErrorMessage(),
                     if (_errorMessage != null) const SizedBox(height: 20),
                     _buildEmailField(),
@@ -172,7 +159,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Extracted widgets to improve readability and performance
   Widget _buildErrorMessage() {
     return Container(
       padding: const EdgeInsets.all(12),

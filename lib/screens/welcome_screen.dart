@@ -7,10 +7,10 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
-  // Define our custom color
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
   static const Color customOrange = Color(0xFFE07E02);
-  
+
   late AnimationController _controller;
   late Animation<double> _imageAnimation;
   late Animation<double> _titleAnimation;
@@ -20,43 +20,40 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    
-    // Initialize the animation controller
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    // Create staggered animations
+
     _imageAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
       ),
     );
-    
+
     _titleAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
       ),
     );
-    
+
     _descriptionAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.5, 0.8, curve: Curves.easeOut),
       ),
     );
-    
+
     _buttonAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
       ),
     );
-    
-    // Start the animation
+
     _controller.forward();
   }
 
@@ -68,9 +65,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen size for responsive design
     final Size screenSize = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Container(
@@ -88,7 +84,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                // Hero image with animation
                 AnimatedBuilder(
                   animation: _imageAnimation,
                   builder: (context, child) {
@@ -125,7 +120,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Title with custom animation
                 AnimatedBuilder(
                   animation: _titleAnimation,
                   builder: (context, child) {
@@ -148,14 +142,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Description with animation
                 AnimatedBuilder(
                   animation: _descriptionAnimation,
                   builder: (context, child) {
                     return Opacity(
                       opacity: _descriptionAnimation.value,
                       child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - _descriptionAnimation.value)),
+                        offset: Offset(
+                          0,
+                          20 * (1 - _descriptionAnimation.value),
+                        ),
                         child: child,
                       ),
                     );
@@ -172,7 +168,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                   ),
                 ),
                 const Spacer(),
-                // Buttons with ripple effect
                 AnimatedBuilder(
                   animation: _buttonAnimation,
                   builder: (context, child) {

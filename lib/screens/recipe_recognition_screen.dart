@@ -6,14 +6,15 @@ import '../providers/user_provider.dart';
 import '../services/recipe_service.dart';
 import '../models/nutrition_info_model.dart';
 import '../widgets/recipe_result_widget.dart';
-import '../widgets/nutrition_info_widget.dart';   
+import '../widgets/nutrition_info_widget.dart';
 import '../utils/image_validation_util.dart';
 
 class RecipeRecognitionScreen extends StatefulWidget {
   const RecipeRecognitionScreen({super.key});
 
   @override
-  State<RecipeRecognitionScreen> createState() => _RecipeRecognitionScreenState();
+  State<RecipeRecognitionScreen> createState() =>
+      _RecipeRecognitionScreenState();
 }
 
 class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
@@ -26,7 +27,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
   String? _recipeResult;
   String? _errorMessage;
 
-  // Colors
   static const Color customOrange = Color(0xFFE07E02);
 
   Future<void> _getImage(ImageSource source) async {
@@ -37,10 +37,9 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       );
 
       if (pickedFile == null) return;
-      
+
       final imageFile = File(pickedFile.path);
-      
-      // Validate if file is an image
+
       if (!imageFile.isValidImage) {
         setState(() {
           _errorMessage = 'The selected file is not a valid image.';
@@ -55,7 +54,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
         _errorMessage = null;
       });
 
-      // Auto analyze after picking image
       _analyzeImage();
     } catch (e) {
       setState(() {
@@ -85,7 +83,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
     final recipeService = RecipeService();
     final userId = userProvider.currentUser!.id;
 
-    // Get nutrition info
     try {
       final nutritionInfo = await recipeService.getNutritionInfo(_image!);
       if (mounted) {
@@ -103,7 +100,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       }
     }
 
-    // Get recipe
     try {
       final recipeResult = await recipeService.getRecipe(_image!, userId);
       if (mounted) {
@@ -149,33 +145,32 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image selection area
               Container(
                 height: 200,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: _image == null
-                    ? Center(
-                        child: Text(
-                          'No image selected',
-                          style: TextStyle(color: Colors.grey.shade600),
+                child:
+                    _image == null
+                        ? Center(
+                          child: Text(
+                            'No image selected',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        )
+                        : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            _image!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
                         ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          _image!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
-                      ),
               ),
               const SizedBox(height: 16),
 
-              // Camera and Gallery buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -201,7 +196,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
                 ],
               ),
 
-              // Error message if any
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -217,7 +211,6 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
                 ),
               ],
 
-              // Loading indicators or results
               if (_isAnalyzing) ...[
                 const SizedBox(height: 24),
                 const Center(
@@ -231,13 +224,11 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
                 ),
               ],
 
-              // Nutrition information
               if (_nutritionInfo != null) ...[
                 const SizedBox(height: 24),
                 NutritionInfoWidget(nutritionInfo: _nutritionInfo!),
               ],
 
-              // Recipe result
               if (_recipeResult != null) ...[
                 const SizedBox(height: 24),
                 RecipeResultWidget(recipeResult: _recipeResult!),

@@ -14,14 +14,15 @@ class ErrorNotificationWidget extends StatefulWidget {
     required this.errorMessage,
     this.duration = const Duration(seconds: 12),
     this.onDismissed,
-    this.backgroundColor = const Color(0xFFFFEBEE), // Light red
-    this.textColor = const Color(0xFFB71C1C), // Dark red
-    this.iconColor = const Color(0xFFB71C1C), // Dark red
-    this.borderColor = const Color(0xFFEF9A9A), // Medium red
+    this.backgroundColor = const Color(0xFFFFEBEE),
+    this.textColor = const Color(0xFFB71C1C),
+    this.iconColor = const Color(0xFFB71C1C),
+    this.borderColor = const Color(0xFFEF9A9A),
   });
 
   @override
-  State<ErrorNotificationWidget> createState() => _ErrorNotificationWidgetState();
+  State<ErrorNotificationWidget> createState() =>
+      _ErrorNotificationWidgetState();
 }
 
 class _ErrorNotificationWidgetState extends State<ErrorNotificationWidget>
@@ -33,7 +34,6 @@ class _ErrorNotificationWidgetState extends State<ErrorNotificationWidget>
   void initState() {
     super.initState();
 
-    // Initialize animation controller
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -47,10 +47,8 @@ class _ErrorNotificationWidgetState extends State<ErrorNotificationWidget>
       ),
     );
 
-    // Start animation
     _animationController.forward();
 
-    // Auto-dismiss after the specified duration
     Future.delayed(widget.duration, () {
       if (mounted) {
         _dismissNotification();
@@ -80,10 +78,7 @@ class _ErrorNotificationWidgetState extends State<ErrorNotificationWidget>
         elevation: 4,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: widget.backgroundColor,
             borderRadius: BorderRadius.circular(8),
@@ -112,18 +107,16 @@ class _ErrorNotificationWidgetState extends State<ErrorNotificationWidget>
   }
 }
 
-// A manager class to handle showing error notifications throughout the app
 class ErrorNotificationManager {
-  // Singleton pattern
-  static final ErrorNotificationManager _instance = ErrorNotificationManager._internal();
+  static final ErrorNotificationManager _instance =
+      ErrorNotificationManager._internal();
   factory ErrorNotificationManager() => _instance;
   ErrorNotificationManager._internal();
 
-  // Method to show error notification with OverlayEntry
   static OverlayEntry? _currentOverlay;
 
   static void showError(
-    BuildContext context, 
+    BuildContext context,
     String message, {
     Duration duration = const Duration(seconds: 12),
     Color backgroundColor = const Color(0xFFFFEBEE),
@@ -131,30 +124,28 @@ class ErrorNotificationManager {
     Color iconColor = const Color(0xFFB71C1C),
     Color borderColor = const Color(0xFFEF9A9A),
   }) {
-    // Remove any existing notification first
     dismissCurrentError();
 
-    // Create overlay entry
     _currentOverlay = OverlayEntry(
-      builder: (context) => Positioned(
-        top: 16,
-        left: 16,
-        right: 16,
-        child: ErrorNotificationWidget(
-          errorMessage: message,
-          duration: duration,
-          backgroundColor: backgroundColor,
-          textColor: textColor,
-          iconColor: iconColor,
-          borderColor: borderColor,
-          onDismissed: () {
-            dismissCurrentError();
-          },
-        ),
-      ),
+      builder:
+          (context) => Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: ErrorNotificationWidget(
+              errorMessage: message,
+              duration: duration,
+              backgroundColor: backgroundColor,
+              textColor: textColor,
+              iconColor: iconColor,
+              borderColor: borderColor,
+              onDismissed: () {
+                dismissCurrentError();
+              },
+            ),
+          ),
     );
 
-    // Insert into overlay
     Overlay.of(context).insert(_currentOverlay!);
   }
 

@@ -9,7 +9,6 @@ import 'providers/user_provider.dart';
 import 'providers/calorie_tracking_provider.dart';
 
 void main() {
-  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
@@ -62,14 +61,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Using addPostFrameCallback to ensure the UI is built before we start loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLoginStatus();
     });
   }
 
   Future<void> _checkLoginStatus() async {
-    // Use try/catch to handle potential exceptions during auth check
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final isAuthenticated = await userProvider.loadUserFromPrefs();

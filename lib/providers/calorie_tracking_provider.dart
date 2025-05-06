@@ -6,13 +6,11 @@ import '../services/storage_service.dart';
 class CalorieTrackingProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
   
-  // Storage for meal items
   List<NutritionInfo> _breakfastItems = [];
   List<NutritionInfo> _lunchItems = [];
   List<NutritionInfo> _dinnerItems = [];
   List<NutritionInfo> _snackItems = [];
   
-  // Daily totals
   NutritionInfo _dailyTotal = NutritionInfo(
     calories: 0, 
     protein: 0, 
@@ -20,19 +18,16 @@ class CalorieTrackingProvider with ChangeNotifier {
     fat: 0
   );
   
-  // Getters
   List<NutritionInfo> get breakfastItems => _breakfastItems;
   List<NutritionInfo> get lunchItems => _lunchItems;
   List<NutritionInfo> get dinnerItems => _dinnerItems;
   List<NutritionInfo> get snackItems => _snackItems;
   NutritionInfo get dailyTotal => _dailyTotal;
   
-  // Format date for storage keys
   String _formatDate(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date);
   }
   
-  // Calculate daily totals
   void _calculateDailyTotal() {
     double totalCalories = 0;
     double totalProtein = 0;
@@ -56,12 +51,10 @@ class CalorieTrackingProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  // Load daily intake data
   Future<void> loadDailyIntake(String userId, DateTime date) async {
     final String dateStr = _formatDate(date);
     
     try {
-      // Load breakfast
       final breakfastData = await _storageService.getCalorieData(
         userId, 
         'breakfast', 
@@ -69,7 +62,6 @@ class CalorieTrackingProvider with ChangeNotifier {
       );
       _breakfastItems = _parseNutritionList(breakfastData);
       
-      // Load lunch
       final lunchData = await _storageService.getCalorieData(
         userId, 
         'lunch', 
@@ -77,7 +69,6 @@ class CalorieTrackingProvider with ChangeNotifier {
       );
       _lunchItems = _parseNutritionList(lunchData);
       
-      // Load dinner
       final dinnerData = await _storageService.getCalorieData(
         userId, 
         'dinner', 
@@ -85,7 +76,6 @@ class CalorieTrackingProvider with ChangeNotifier {
       );
       _dinnerItems = _parseNutritionList(dinnerData);
       
-      // Load snacks
       final snackData = await _storageService.getCalorieData(
         userId, 
         'snack', 
@@ -93,11 +83,9 @@ class CalorieTrackingProvider with ChangeNotifier {
       );
       _snackItems = _parseNutritionList(snackData);
       
-      // Calculate totals
       _calculateDailyTotal();
       
     } catch (e) {
-      // Reset all values on error
       _breakfastItems = [];
       _lunchItems = [];
       _dinnerItems = [];
@@ -107,14 +95,12 @@ class CalorieTrackingProvider with ChangeNotifier {
     }
   }
   
-  // Parse nutrition info list from storage
   List<NutritionInfo> _parseNutritionList(List<dynamic>? data) {
     if (data == null) return [];
     
     return data.map((item) => NutritionInfo.fromJson(item)).toList();
   }
   
-  // Add meal data
   Future<void> addMealData(
     String userId, 
     DateTime date, 
@@ -163,16 +149,13 @@ class CalorieTrackingProvider with ChangeNotifier {
           break;
       }
       
-      // Update daily totals
       _calculateDailyTotal();
       
     } catch (e) {
-      
-      print('Error adding meal data: $e');
+      // Handle error
     }
   }
   
-  // Remove meal item
   Future<void> removeMealItem(
     String userId,
     DateTime date,
@@ -229,15 +212,13 @@ class CalorieTrackingProvider with ChangeNotifier {
           break;
       }
       
-      // Update daily totals
       _calculateDailyTotal();
       
     } catch (e) {
-      print('Error removing calorie data: $e');
+      // Handle error
     }
   }
   
-  // Clear all data for a specific day
   Future<void> clearDailyData(String userId, DateTime date) async {
     final String dateStr = _formatDate(date);
     
@@ -252,7 +233,7 @@ class CalorieTrackingProvider with ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('Error clearing calorie data: $e');
+      // Handle error
     }
   }
 }

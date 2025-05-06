@@ -21,7 +21,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // User data is already loaded via UserProvider
   }
 
   Future<void> _logout() async {
@@ -37,15 +36,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         await authService.logout(userProvider.currentUser!.id);
       }
 
-      // Clear user data from provider
       await userProvider.clearUser();
 
-      // Check if widget is still mounted before using BuildContext
       if (!mounted) return;
 
       Navigator.pushReplacementNamed(context, '/welcome');
     } catch (e) {
-      // Check if widget is still mounted before using BuildContext
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +106,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Access user data from provider
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.currentUser;
 
@@ -160,7 +155,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Welcome header with user name
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
@@ -171,7 +165,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
-                    // User role badge
                     if (user.isDoctor)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -193,7 +186,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ),
-                    // Feature cards with updated colors and without Food Substitutions
                     Row(
                       children: [
                         Expanded(

@@ -13,26 +13,22 @@ class ChatProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
 
-  // Getters
   List<Conversation> get conversations => _conversations;
   List<ChatMessage> get messages => _currentConversationMessages;
   String? get currentConversationId => _currentConversationId;
   bool get isLoading => _isLoading;
 
-  // Set user
   void setUser(User user) {
     _currentUser = user;
     loadConversations();
   }
 
-  //Start a new conversation
   void startNewConversation() {
     _currentConversationId = null;
     _currentConversationMessages.clear();
     notifyListeners();
   }
 
-  // Load user conversations
   Future<void> loadConversations() async {
     if (_currentUser == null) return;
 
@@ -49,7 +45,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Select a conversation
   Future<void> selectConversation(String conversationId) async {
     _currentConversationId = conversationId;
     _isLoading = true;
@@ -67,7 +62,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Delete a conversation
   Future<void> deleteConversation(String conversationId) async {
     _isLoading = true;
     notifyListeners();
@@ -76,12 +70,10 @@ class ChatProvider extends ChangeNotifier {
       final success = await _apiService.deleteConversation(conversationId);
 
       if (success) {
-        // Remove the conversation from the list
         _conversations.removeWhere(
           (conversation) => conversation.id == conversationId,
         );
 
-        // If the deleted conversation is the current conversation, clear it
         if (_currentConversationId == conversationId) {
           _currentConversationId = null;
           _currentConversationMessages.clear();
@@ -96,57 +88,47 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Send a message in current conversation
   Future<void> sendMessage(String message) async {
     if (_currentUser == null) return;
 
     try {
-      // Create temporary user message to display immediately
       final String tempId = DateTime.now().millisecondsSinceEpoch.toString();
       final userMessage = ChatMessage(
         id: tempId,
         conversationId: _currentConversationId ?? tempId,
         userChat: message,
-        botChat: '', // Empty bot chat initially
+        botChat: '', 
         checkSearch: false,
-        isTyping: true, // Indicate bot is typing
+        isTyping: true, 
       );
 
-      // Add message to current conversation immediately
       _currentConversationMessages.add(userMessage);
       notifyListeners();
 
-      // Then send to API
       ChatMessage responseMessage;
       if (_currentConversationId != null) {
-        // Add to existing conversation
         responseMessage = await _apiService.sendMessage(
           conversationId: _currentConversationId!,
           userMessage: message,
         );
       } else {
-        // Start a new conversation
         responseMessage = await _apiService.startNewConversation(
           userId: _currentUser!.id,
           userMessage: message,
         );
 
-        // Update current conversation ID
         _currentConversationId = responseMessage.conversationId;
 
-        // Add the new conversation to our list
         Conversation newConversation = Conversation(
           id: responseMessage.conversationId,
           userId: _currentUser!.id,
-          topic: "New Conversation", // Backend might set a different topic
+          topic: "New Conversation", 
         );
         _conversations.add(newConversation);
       }
 
-      // Create a new list to trigger state update for animations
       _currentConversationMessages = List.from(_currentConversationMessages);
 
-      // Update the temporary message with the actual response
       final index = _currentConversationMessages.indexWhere(
         (msg) => msg.id == tempId,
       );

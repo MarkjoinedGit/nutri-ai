@@ -5,7 +5,7 @@ class MealSectionWidget extends StatelessWidget {
   final String title;
   final List<NutritionInfo> items;
   final Function(int) onRemove;
-  final VoidCallback onAddPressed; // New callback for add button
+  final VoidCallback onAddPressed;
   static const Color customOrange = Color(0xFFE07E02);
 
   const MealSectionWidget({
@@ -13,7 +13,7 @@ class MealSectionWidget extends StatelessWidget {
     required this.title,
     required this.items,
     required this.onRemove,
-    required this.onAddPressed, // Added required parameter
+    required this.onAddPressed,
   });
 
   double _calculateMealCalories() {
@@ -83,12 +83,8 @@ class MealSectionWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Add button for the meal section
                     IconButton(
-                      icon: const Icon(
-                        Icons.add_circle,
-                        color: customOrange,
-                      ),
+                      icon: const Icon(Icons.add_circle, color: customOrange),
                       tooltip: 'Add food to $title',
                       onPressed: onAddPressed,
                     ),

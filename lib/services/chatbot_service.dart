@@ -12,7 +12,6 @@ class ApiService {
     'Accept': 'application/json; charset=UTF-8',
   };
 
-  // Get conversations for a user
   Future<List<Conversation>> getUserConversations(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/conversations/user/$userId'),
@@ -27,7 +26,6 @@ class ApiService {
     }
   }
 
-  // Get chat messages for a conversation
   Future<List<ChatMessage>> getConversationChats(String conversationId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/chats/conv/$conversationId'),
@@ -42,7 +40,6 @@ class ApiService {
     }
   }
 
-  // Send a message to an existing conversation
   Future<ChatMessage> sendMessage({
     required String conversationId,
     required String userMessage,
@@ -63,7 +60,6 @@ class ApiService {
     }
   }
 
-  // Start a new conversation
   Future<ChatMessage> startNewConversation({
     required String userId,
     required String userMessage,
@@ -84,7 +80,6 @@ class ApiService {
     }
   }
   
-  // Delete a conversation
   Future<bool> deleteConversation(String conversationId) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/conversations/$conversationId'),

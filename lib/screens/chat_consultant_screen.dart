@@ -50,7 +50,6 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
       Provider.of<ChatProvider>(context, listen: false).sendMessage(message);
       _messageController.clear();
 
-      // Scroll to bottom immediately after adding the user message
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -59,7 +58,6 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
         );
       }
 
-      // And also after some delay to ensure we scroll to the very bottom after layout
       Future.delayed(const Duration(milliseconds: 300), () {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -72,15 +70,15 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     }
   }
 
-  // Open conversation history
   void _openConversationHistory() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider.value(
-          value: Provider.of<ChatProvider>(context, listen: false),
-          child: ConversationsScreen(),
-        ),
+        builder:
+            (context) => ChangeNotifierProvider.value(
+              value: Provider.of<ChatProvider>(context, listen: false),
+              child: ConversationsScreen(),
+            ),
       ),
     );
   }
@@ -105,19 +103,17 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
           onPressed: _navigateToDashboard,
         ),
         actions: [
-          // Add history button to the app bar
           IconButton(
             icon: const Icon(Icons.history, color: Colors.black87),
             tooltip: 'View conversation history',
             onPressed: _openConversationHistory,
           ),
-          // Add a new conversation button to the app bar
           IconButton(
             icon: const Icon(Icons.add_comment, color: Colors.black87),
             tooltip: 'Start new conversation',
             onPressed: () {
               final chatProvider = Provider.of<ChatProvider>(
-                context, 
+                context,
                 listen: false,
               );
               chatProvider.startNewConversation();
@@ -140,28 +136,18 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
                         : ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          // Each message generates two chat bubbles (user + bot)
                           itemCount: messages.length * 2,
                           itemBuilder: (context, index) {
-                            // Determine if this is a user message or bot message
-                            final messageIndex =
-                                index ~/
-                                2; // Integer division to get the message object index
-                            final isUserMessage =
-                                index % 2 ==
-                                0; // Even indices are user messages
+                            final messageIndex = index ~/ 2;
+                            final isUserMessage = index % 2 == 0;
 
-                            // Get the message from the list
                             final message = messages[messageIndex];
 
-                            // Only show bot message if we're at an odd index
-                            // And make sure we don't exceed array bounds
                             if (!isUserMessage &&
                                 messageIndex >= messages.length) {
                               return const SizedBox.shrink();
                             }
 
-                            // Show typing animation if the bot is typing
                             final isTyping = !isUserMessage && message.isTyping;
                             final text =
                                 isUserMessage
@@ -212,7 +198,6 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          // Add a button to view conversation history
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _openConversationHistory,
