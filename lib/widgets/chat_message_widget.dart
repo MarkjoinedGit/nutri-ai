@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatMessageWidget extends StatelessWidget {
   final String text;
@@ -31,122 +32,84 @@ class ChatMessageWidget extends StatelessWidget {
         ),
         child:
             isTyping && !isUser
-                ? _buildTypingIndicator()
-                : Text(
+                ? const TypingIndicator()
+                : isUser
+                ? Text(
                   text,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: isUser ? Colors.white : Colors.black87,
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                )
+                : MarkdownBody(
+                  // 👈 Markdown cho tin nhắn bot
+                  data: text,
+                  styleSheet: MarkdownStyleSheet(
+                    p: const TextStyle(fontSize: 16, color: Colors.black87),
+                    strong: const TextStyle(fontWeight: FontWeight.bold),
+                    em: const TextStyle(fontStyle: FontStyle.italic),
+                    code: TextStyle(
+                      fontFamily: 'monospace',
+                      backgroundColor: Colors.grey.shade300,
+                    ),
                   ),
                 ),
       ),
     );
   }
+}
 
-  Widget _buildTypingIndicator() {
+// Separated the typing indicator into its own stateful widget
+class TypingIndicator extends StatefulWidget {
+  const TypingIndicator({super.key});
+
+  @override
+  State<TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [_buildDot(0), _buildDot(1), _buildDot(2)],
+      children: List.generate(3, (index) => _buildDot(index)),
     );
   }
 
   Widget _buildDot(int index) {
     return AnimatedBuilder(
-      animation: TypingDotsAnimation(),
+      animation: _controller,
       builder: (context, child) {
+        // Calculate a phase offset based on the dot index
+        final double phaseOffset = index * 0.2;
+        final double animationValue =
+            ((_controller.value + phaseOffset) % 1.0) < 0.5 ? 0.3 : 0.7;
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 2),
           height: 8,
           width: 8,
           decoration: BoxDecoration(
-            color: Colors.black54.withValues(alpha:
-              // Each dot animates with a slight delay
-              (TypingDotsAnimation.getValue() + (index * 0.3)) % 1.0 < 0.5
-                  ? 0.3
-                  : 0.7,
-            ),
+            color: Colors.black54.withValues(alpha: animationValue),
             shape: BoxShape.circle,
           ),
         );
       },
     );
   }
-}
-
-class TypingDotsAnimation extends Animation<double> with AnimationLinkMixin {
-  static double _value = 0;
-  static bool _isAnimating = true;
-
-  TypingDotsAnimation() {
-    if (_isAnimating) {
-      _startAnimation();
-    }
-  }
-
-  static double getValue() => _value;
-
-  void _startAnimation() {
-    _isAnimating = true;
-    _animate();
-  }
-
-  void _animate() {
-    if (!_isAnimating) return;
-    _value = (_value + 0.1) % 1.0;
-    notifyListeners();
-    Future.delayed(const Duration(milliseconds: 150), _animate);
-  }
-
-  @override
-  void removeListener(VoidCallback listener) {
-    super.removeListener(listener);
-    if (!hasListeners) {
-      _isAnimating = false;
-    }
-  }
-
-  @override
-  double get value => _value;
-}
-
-// Animation link mixin
-mixin AnimationLinkMixin on Animation<double> {
-  final List<VoidCallback> _listeners = [];
-  final List<AnimationStatusListener> _statusListeners = [];
-
-  @override
-  void addListener(VoidCallback listener) {
-    _listeners.add(listener);
-  }
-
-  @override
-  void removeListener(VoidCallback listener) {
-    _listeners.remove(listener);
-  }
-
-  @override
-  void addStatusListener(AnimationStatusListener listener) {
-    _statusListeners.add(listener);
-  }
-
-  @override
-  void removeStatusListener(AnimationStatusListener listener) {
-    _statusListeners.remove(listener);
-  }
-
-  void notifyListeners() {
-    for (final listener in List<VoidCallback>.from(_listeners)) {
-      if (_listeners.contains(listener)) {
-        listener();
-      }
-    }
-  }
-
-  bool get hasListeners => _listeners.isNotEmpty;
-
-  @override
-  bool get isCompleted => false;
-
-  @override
-  AnimationStatus get status => AnimationStatus.forward;
 }

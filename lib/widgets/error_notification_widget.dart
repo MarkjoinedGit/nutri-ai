@@ -10,7 +10,7 @@ class ErrorNotificationWidget extends StatefulWidget {
   final Color borderColor;
 
   const ErrorNotificationWidget({
-    Key? key,
+    super.key,
     required this.errorMessage,
     this.duration = const Duration(seconds: 12),
     this.onDismissed,
@@ -18,7 +18,7 @@ class ErrorNotificationWidget extends StatefulWidget {
     this.textColor = const Color(0xFFB71C1C), // Dark red
     this.iconColor = const Color(0xFFB71C1C), // Dark red
     this.borderColor = const Color(0xFFEF9A9A), // Medium red
-  }) : super(key: key);
+  });
 
   @override
   State<ErrorNotificationWidget> createState() => _ErrorNotificationWidgetState();

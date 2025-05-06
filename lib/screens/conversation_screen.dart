@@ -26,6 +26,47 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     });
   }
 
+  // Navigate back to chat consultant screen
+  void _navigateToChatConsultant() {
+    // If we're viewing conversation history while already in a chat,
+    // just return to that chat without creating a new screen
+    Navigator.pop(context);
+  }
+
+  // Show confirmation dialog before deleting a conversation
+  void _confirmDeleteConversation(BuildContext context, String conversationId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Conversation'),
+          content: const Text(
+            'Are you sure you want to delete this consultation?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Provider.of<ChatProvider>(
+                  context,
+                  listen: false,
+                ).deleteConversation(conversationId);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +77,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: _navigateToChatConsultant,
+        ),
       ),
       body: Consumer<ChatProvider>(
         builder: (context, chatProvider, child) {
@@ -76,40 +122,97 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             );
           }
 
+          final reversedConversations =
+              chatProvider.conversations.reversed.toList();
+
           return ListView.builder(
-            itemCount: chatProvider.conversations.length,
+            itemCount: reversedConversations.length,
             itemBuilder: (context, index) {
-              final conversation = chatProvider.conversations[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFFE07E02),
-                  child: Icon(Icons.chat_rounded, color: Colors.white),
+              final conversation = reversedConversations[index];
+              return Dismissible(
+                key: Key(conversation.id),
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20.0),
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                title: Text(
-                  conversation.topic,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                subtitle: Text(
-                  'Tap to continue consultation',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ChangeNotifierProvider.value(
-                            value: Provider.of<ChatProvider>(
-                              context,
-                              listen: false,
-                            ),
-                            child: ChatConsultantScreen(
-                              conversationId: conversation.id,
-                            ),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (direction) async {
+                  bool? result = await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Confirm"),
+                        content: const Text(
+                          "Are you sure you want to delete this consultation?",
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text("CANCEL"),
                           ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text("DELETE"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  return result;
+                },
+                onDismissed: (direction) {
+                  chatProvider.deleteConversation(conversation.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Consultation deleted'),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFFE07E02),
+                    child: Icon(Icons.chat_rounded, color: Colors.white),
+                  ),
+                  title: Text(
+                    conversation.topic,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    'Tap to continue consultation',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed:
+                        () => _confirmDeleteConversation(
+                          context,
+                          conversation.id,
+                        ),
+                  ),
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ChangeNotifierProvider.value(
+                              value: Provider.of<ChatProvider>(
+                                context,
+                                listen: false,
+                              ),
+                              child: ChatConsultantScreen(
+                                conversationId: conversation.id,
+                              ),
+                            ),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );
@@ -124,7 +227,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             listen: false,
           );
           chatProvider.startNewConversation();
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder:
