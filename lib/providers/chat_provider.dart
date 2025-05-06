@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/chat_message_model.dart';
 import '../models/conversation_model.dart';
-import '../services/api_service.dart';
+import '../services/chatbot_service.dart';
 import '../models/user_model.dart';
 
 class ChatProvider extends ChangeNotifier {
@@ -67,6 +67,35 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  // Delete a conversation
+  Future<void> deleteConversation(String conversationId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final success = await _apiService.deleteConversation(conversationId);
+
+      if (success) {
+        // Remove the conversation from the list
+        _conversations.removeWhere(
+          (conversation) => conversation.id == conversationId,
+        );
+
+        // If the deleted conversation is the current conversation, clear it
+        if (_currentConversationId == conversationId) {
+          _currentConversationId = null;
+          _currentConversationMessages.clear();
+        }
+      }
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Send a message in current conversation
   Future<void> sendMessage(String message) async {
     if (_currentUser == null) return;
@@ -113,6 +142,9 @@ class ChatProvider extends ChangeNotifier {
         );
         _conversations.add(newConversation);
       }
+
+      // Create a new list to trigger state update for animations
+      _currentConversationMessages = List.from(_currentConversationMessages);
 
       // Update the temporary message with the actual response
       final index = _currentConversationMessages.indexWhere(

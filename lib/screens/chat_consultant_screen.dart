@@ -8,10 +8,7 @@ import '../screens/conversation_screen.dart';
 class ChatConsultantScreen extends StatefulWidget {
   final String? conversationId;
 
-  const ChatConsultantScreen({
-    super.key,
-    this.conversationId,
-  });
+  const ChatConsultantScreen({super.key, this.conversationId});
 
   @override
   State<ChatConsultantScreen> createState() => _ChatConsultantScreenState();
@@ -29,10 +26,10 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-      
+
       if (userProvider.currentUser != null) {
         chatProvider.setUser(userProvider.currentUser!);
-        
+
         if (widget.conversationId != null) {
           chatProvider.selectConversation(widget.conversationId!);
         }
@@ -88,6 +85,10 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     );
   }
 
+  void _navigateToDashboard() {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,9 +99,10 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _navigateToDashboard,
         ),
         actions: [
           // Add history button to the app bar
@@ -108,6 +110,18 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
             icon: const Icon(Icons.history, color: Colors.black87),
             tooltip: 'View conversation history',
             onPressed: _openConversationHistory,
+          ),
+          // Add a new conversation button to the app bar
+          IconButton(
+            icon: const Icon(Icons.add_comment, color: Colors.black87),
+            tooltip: 'Start new conversation',
+            onPressed: () {
+              final chatProvider = Provider.of<ChatProvider>(
+                context, 
+                listen: false,
+              );
+              chatProvider.startNewConversation();
+            },
           ),
         ],
       ),
@@ -231,12 +245,6 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
       ),
       child: Row(
         children: [
-          // Add a history button next to the text field
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.grey),
-            tooltip: 'View conversation history',
-            onPressed: _openConversationHistory,
-          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
