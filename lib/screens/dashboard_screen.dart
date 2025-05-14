@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:nutri_al/screens/health_monitoring_screen.dart';
+import 'package:provider/provider.dart';
 import './chat_consultant_screen.dart';
 import './recipe_recognition_screen.dart';
 import './calorie_tracking_screen.dart';
-import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../providers/user_provider.dart';
 
@@ -94,6 +95,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => const CalorieTrackingScreen(),
+          ),
+        );
+        break;
+      case 'Health Monitoring':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HealthMonitoringScreen(),
           ),
         );
         break;
