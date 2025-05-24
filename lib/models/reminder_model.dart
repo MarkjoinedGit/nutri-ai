@@ -1,112 +1,68 @@
-import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
+enum RepeatType {
+  none('none'),
+  daily('daily'),
+  weekly('weekly'),
+  monthly('monthly');
 
-enum RepeatType { none, daily, weekly, monthly }
-
-extension RepeatTypeExtension on RepeatType {
-  String get value {
-    switch (this) {
-      case RepeatType.none:
-        return 'none';
-      case RepeatType.daily:
-        return 'daily';
-      case RepeatType.weekly:
-        return 'weekly';
-      case RepeatType.monthly:
-        return 'monthly';
-    }
-  }
+  const RepeatType(this.value);
+  final String value;
 
   static RepeatType fromString(String value) {
-    switch (value) {
-      case 'daily':
-        return RepeatType.daily;
-      case 'weekly':
-        return RepeatType.weekly;
-      case 'monthly':
-        return RepeatType.monthly;
-      default:
-        return RepeatType.none;
-    }
+    return RepeatType.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => RepeatType.none,
+    );
   }
 }
 
-enum ReminderType { water, mainMeal, snack, supplement, other }
+enum ReminderType {
+  water('water'),
+  mainMeal('main_meal'),
+  snack('snack'),
+  supplement('supplement'),
+  other('other');
 
-extension ReminderTypeExtension on ReminderType {
-  String get value {
-    switch (this) {
-      case ReminderType.water:
-        return 'water';
-      case ReminderType.mainMeal:
-        return 'main_meal';
-      case ReminderType.snack:
-        return 'snack';
-      case ReminderType.supplement:
-        return 'supplement';
-      case ReminderType.other:
-        return 'other';
-    }
-  }
+  const ReminderType(this.value);
+  final String value;
 
   static ReminderType fromString(String value) {
-    switch (value) {
-      case 'water':
-        return ReminderType.water;
-      case 'main_meal':
-        return ReminderType.mainMeal;
-      case 'snack':
-        return ReminderType.snack;
-      case 'supplement':
-        return ReminderType.supplement;
-      default:
-        return ReminderType.other;
-    }
+    return ReminderType.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => ReminderType.other,
+    );
   }
 }
 
-enum ReminderStatus { active, paused, completed }
+enum ReminderStatus {
+  active('active'),
+  paused('paused'),
+  completed('completed');
 
-extension ReminderStatusExtension on ReminderStatus {
-  String get value {
-    switch (this) {
-      case ReminderStatus.active:
-        return 'active';
-      case ReminderStatus.paused:
-        return 'paused';
-      case ReminderStatus.completed:
-        return 'completed';
-    }
-  }
+  const ReminderStatus(this.value);
+  final String value;
 
   static ReminderStatus fromString(String value) {
-    switch (value) {
-      case 'active':
-        return ReminderStatus.active;
-      case 'paused':
-        return ReminderStatus.paused;
-      case 'completed':
-        return ReminderStatus.completed;
-      default:
-        return ReminderStatus.active;
-    }
+    return ReminderStatus.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => ReminderStatus.active,
+    );
   }
 }
 
 class Reminder {
-  final String? id;
+  final String id;
   final String userId;
   final String title;
   final String? description;
-  final DateTime time;
+  final String time;
   final RepeatType repeat;
   final ReminderType type;
   final ReminderStatus status;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Reminder({
-    this.id,
+    required this.id,
     required this.userId,
     required this.title,
     this.description,
@@ -114,104 +70,78 @@ class Reminder {
     this.repeat = RepeatType.none,
     this.type = ReminderType.other,
     this.status = ReminderStatus.active,
-    this.createdAt,
-    this.updatedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  Map<String, dynamic> toMap() {
+  factory Reminder.fromJson(Map<String, dynamic> json) {
+    return Reminder(
+      id: json['_id'] ?? json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'],
+      time: json['time'] ?? '',
+      repeat: RepeatType.fromString(json['repeat'] ?? 'none'),
+      type: ReminderType.fromString(json['type'] ?? 'other'),
+      status: ReminderStatus.fromString(json['status'] ?? 'active'),
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
+    );
+  }
+
+  static DateTime _parseDateTime(dynamic dateTimeValue) {
+    if (dateTimeValue == null) return DateTime.now();
+
+    try {
+      if (dateTimeValue is String) {
+        if (dateTimeValue.contains('+') || dateTimeValue.contains('Z')) {
+          final dateTime = DateTime.parse(dateTimeValue);
+          return dateTime.toLocal();
+        } else {
+          return DateTime.parse(dateTimeValue);
+        }
+      }
+      return DateTime.now();
+    } catch (e) {
+      return DateTime.now();
+    }
+  }
+
+  Map<String, dynamic> toJson() {
     return {
       'userId': userId,
       'title': title,
       'description': description,
-      // GỬI THỜI GIAN THEO ĐỊNH DẠNG LOCAL (KHÔNG CHUYỂN SANG UTC)
-      'time': time.toIso8601String(), // Bỏ .toUtc()
+      'time': time,
       'repeat': repeat.value,
       'type': type.value,
       'status': status.value,
     };
   }
 
-  factory Reminder.fromMap(Map<String, dynamic> map) {
+  Reminder copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? description,
+    String? time,
+    RepeatType? repeat,
+    ReminderType? type,
+    ReminderStatus? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
     return Reminder(
-      id: map['_id'],
-      userId: map['userId'],
-      title: map['title'],
-      description: map['description'],
-      // PARSE THỜI GIAN VỚI XỬ LÝ TIMEZONE CHÍNH XÁC
-      time: _parseDateTime(map['time']),
-      repeat: RepeatTypeExtension.fromString(map['repeat']),
-      type: ReminderTypeExtension.fromString(map['type']),
-      status: ReminderStatusExtension.fromString(map['status']),
-      createdAt: map['createdAt'] != null ? _parseDateTime(map['createdAt']) : null,
-      updatedAt: map['updatedAt'] != null ? _parseDateTime(map['updatedAt']) : null,
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      time: time ?? this.time,
+      repeat: repeat ?? this.repeat,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
-  }
-
-  // Helper method để parse datetime với timezone
-  static DateTime _parseDateTime(String dateTimeString) {
-    try {
-      // Nếu có timezone info (+07:00), parse và convert về local time
-      if (dateTimeString.contains('+') || dateTimeString.contains('Z')) {
-        final utcDateTime = DateTime.parse(dateTimeString);
-        return utcDateTime.toLocal();
-      } else {
-        // Nếu không có timezone info, treat as local time
-        return DateTime.parse(dateTimeString);
-      }
-    } catch (e) {
-      // Fallback: parse as is
-      return DateTime.parse(dateTimeString);
-    }
-  }
-
-  String getTimeFormatted() {
-    return DateFormat('HH:mm').format(time);
-  }
-
-  String getDateFormatted() {
-    return DateFormat('dd/MM/yyyy').format(time);
-  }
-
-  String getRepeatText() {
-    switch (repeat) {
-      case RepeatType.none:
-        return 'Không lặp lại';
-      case RepeatType.daily:
-        return 'Hàng ngày';
-      case RepeatType.weekly:
-        return 'Hàng tuần';
-      case RepeatType.monthly:
-        return 'Hàng tháng';
-    }
-  }
-
-  String getTypeText() {
-    switch (type) {
-      case ReminderType.water:
-        return 'Uống nước';
-      case ReminderType.mainMeal:
-        return 'Bữa chính';
-      case ReminderType.snack:
-        return 'Ăn nhẹ';
-      case ReminderType.supplement:
-        return 'Thực phẩm bổ sung';
-      case ReminderType.other:
-        return 'Khác';
-    }
-  }
-
-  IconData getTypeIcon() {
-    switch (type) {
-      case ReminderType.water:
-        return Icons.water_drop_outlined;
-      case ReminderType.mainMeal:
-        return Icons.restaurant_outlined;
-      case ReminderType.snack:
-        return Icons.cake_outlined;
-      case ReminderType.supplement:
-        return Icons.medication_outlined;
-      case ReminderType.other:
-        return Icons.notifications_outlined;
-    }
   }
 }
