@@ -7,10 +7,14 @@ import 'screens/dashboard_screen.dart';
 import 'providers/chat_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/calorie_tracking_provider.dart';
-import '/providers/medical_record_provider.dart';
+import 'providers/medical_record_provider.dart';
+import 'providers/reminder_provider.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService().initialize();
 
   runApp(
     MultiProvider(
@@ -19,6 +23,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CalorieTrackingProvider()),
         ChangeNotifierProvider(create: (_) => MedicalRecordProvider()),
+        ChangeNotifierProvider(create: (_) => ReminderProvider()),
       ],
       child: const NutriAI(),
     ),
