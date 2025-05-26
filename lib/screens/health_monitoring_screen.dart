@@ -7,6 +7,7 @@ import '../providers/medical_record_provider.dart';
 import '../models/medical_record_model.dart';
 import '../widgets/medical_record_card.dart';
 import '../widgets/edit_medical_record_dialog.dart';
+import '../widgets/processing_medical_record_dialog.dart';
 
 class HealthMonitoringScreen extends StatefulWidget {
   const HealthMonitoringScreen({super.key});
@@ -18,6 +19,7 @@ class HealthMonitoringScreen extends StatefulWidget {
 class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+  bool _isProcessing = false;
   static const Color customOrange = Color(0xFFE07E02);
 
   @override
@@ -42,13 +44,13 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       await recordProvider.fetchRecords(userId);
 
       if (mounted) {
-        setState(() {}); // Ensure UI updates only if the widget is still mounted
+        setState(() {});
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
@@ -84,6 +86,10 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
     }
 
     try {
+      setState(() {
+        _isProcessing = true;
+      });
+
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final userId = userProvider.currentUser?.id;
 
@@ -105,14 +111,15 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
         setState(() {
           _selectedImage = null;
+          _isProcessing = false;
         });
       }
     }
@@ -123,45 +130,42 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Medical Record Processed'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Patient Name: ${record.patientName}'),
-              Text('Age: ${record.age}'),
-              Text('Gender: ${record.gender}'),
-              Text('Admission Date: ${record.admissionDatetime}'),
-              Text('Reason: ${record.reasonForAdmission}'),
-              Text('Preliminary Diagnosis: ${record.preliminaryDiagnosis}'),
-              Text('Confirmed Diagnosis: ${record.confirmedDiagnosis}'),
-              Text('Treatment Plan: ${record.treatmentPlan}'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Medical Record Processed'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Patient Name: ${record.patientName}'),
+                  Text('Age: ${record.age}'),
+                  Text('Gender: ${record.gender}'),
+                  Text('Admission Date: ${record.admissionDatetime}'),
+                  Text('Reason: ${record.reasonForAdmission}'),
+                  Text('Preliminary Diagnosis: ${record.preliminaryDiagnosis}'),
+                  Text('Confirmed Diagnosis: ${record.confirmedDiagnosis}'),
+                  Text('Treatment Plan: ${record.treatmentPlan}'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _showEditDialog(record);
+                },
+                child: const Text('Edit'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _fetchMedicalRecords();
+                },
+                child: const Text('Confirm'),
+              ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showEditDialog(record);
-            },
-            child: const Text('Edit'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              final recordProvider = Provider.of<MedicalRecordProvider>(
-                context,
-                listen: false,
-              );
-              recordProvider.addRecord(record);
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -170,13 +174,14 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => EditMedicalRecordDialog(
-        record: record,
-        onSave: (updatedRecord) async {
-          Navigator.of(context).pop();
-          await _updateMedicalRecord(updatedRecord);
-        },
-      ),
+      builder:
+          (context) => EditMedicalRecordDialog(
+            record: record,
+            onSave: (updatedRecord) async {
+              Navigator.of(context).pop();
+              await _updateMedicalRecord(updatedRecord);
+            },
+          ),
     );
   }
 
@@ -195,10 +200,19 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
+    }
+  }
+
+  void _cancelProcessing() {
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+        _selectedImage = null;
+      });
     }
   }
 
@@ -212,99 +226,177 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
 
         if (error != null && mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error: $error')));
           });
         }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'Health Monitoring',
-              style: TextStyle(color: Colors.black87),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0.5,
-            iconTheme: const IconThemeData(color: Colors.black87),
-          ),
-          body: isLoading && records.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Your Medical Records',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    Expanded(
-                      child: records.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No medical records found. Upload your first medical record.',
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: records.length,
-                              itemBuilder: (context, index) {
-                                return MedicalRecordCard(
-                                  record: records[index],
-                                  onEdit: () =>
-                                      _showEditDialog(records[index]),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+        return Stack(
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: const Text(
+                  'Health Monitoring',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: isLoading
-                ? null
-                : () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.camera_alt),
-                              title: const Text('Take a photo'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImage(ImageSource.camera);
-                              },
+                backgroundColor: Colors.white,
+                elevation: 0.5,
+                iconTheme: const IconThemeData(color: Colors.black87),
+              ),
+              body:
+                  isLoading && records.isEmpty
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Text(
+                              'Your Medical Records',
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
-                            ListTile(
-                              leading: const Icon(Icons.photo_library),
-                              title: const Text('Choose from gallery'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImage(ImageSource.gallery);
-                              },
-                            ),
-                          ],
-                        ),
+                          ),
+                          Expanded(
+                            child:
+                                records.isEmpty
+                                    ? const Center(
+                                      child: Text(
+                                        'No medical records found. Upload your first medical record.',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                    : ListView.builder(
+                                      padding: const EdgeInsets.all(16),
+                                      itemCount: records.length,
+                                      itemBuilder: (context, index) {
+                                        return MedicalRecordCard(
+                                          record: records[index],
+                                          onEdit:
+                                              () => _showEditDialog(
+                                                records[index],
+                                              ),
+                                        );
+                                      },
+                                    ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-            label: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Text('Upload Medical Record'),
-            icon: isLoading ? Container() : const Icon(Icons.add),
-            backgroundColor: customOrange,
-          ),
+              floatingActionButton:
+                  _isProcessing
+                      ? null
+                      : FloatingActionButton.extended(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                            ),
+                            builder:
+                                (context) => SafeArea(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 4,
+                                        margin: const EdgeInsets.only(
+                                          top: 12,
+                                          bottom: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: Text(
+                                          'Select Image Source',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: customOrange.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.camera_alt,
+                                            color: customOrange,
+                                          ),
+                                        ),
+                                        title: const Text('Take a photo'),
+                                        subtitle: const Text(
+                                          'Capture with camera',
+                                        ),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _pickImage(ImageSource.camera);
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: customOrange.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.photo_library,
+                                            color: customOrange,
+                                          ),
+                                        ),
+                                        title: const Text(
+                                          'Choose from gallery',
+                                        ),
+                                        subtitle: const Text(
+                                          'Select from photos',
+                                        ),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _pickImage(ImageSource.gallery);
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  ),
+                                ),
+                          );
+                        },
+                        label: const Text(
+                          'Upload Medical Record',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        icon: const Icon(Icons.add),
+                        backgroundColor: customOrange,
+                        foregroundColor: Colors.white,
+                      ),
+            ),
+            ProcessingMedicalRecordDialog(
+              isVisible: _isProcessing,
+              onCancel: _cancelProcessing,
+            ),
+          ],
         );
       },
     );

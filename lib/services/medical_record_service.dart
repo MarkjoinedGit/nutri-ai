@@ -9,7 +9,6 @@ import '../config/api_config.dart';
 class MedicalRecordService {
   final String baseUrl = ApiConfig.baseUrl;
 
-  // Lấy danh sách hồ sơ y tế của người dùng
   Future<List<MedicalRecord>> fetchMedicalRecords(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/MedicalRecords/user/$userId'),
@@ -24,7 +23,6 @@ class MedicalRecordService {
     }
   }
 
-  // Upload hồ sơ y tế kèm ảnh
   Future<MedicalRecord> uploadMedicalRecord(File image, String userId) async {
     try {
       final mimeType = lookupMimeType(image.path);
@@ -61,10 +59,9 @@ class MedicalRecordService {
     }
   }
 
-  // Cập nhật hồ sơ y tế
   Future<MedicalRecord> updateMedicalRecord(MedicalRecord record) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/MedicalRecords/update/${record.id}'),
+      Uri.parse('$baseUrl/MedicalRecords/${record.id}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(record.toJson()),
     );
