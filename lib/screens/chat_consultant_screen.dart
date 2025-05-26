@@ -216,7 +216,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -229,30 +229,41 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _messageController,
-                decoration: InputDecoration(
-                  hintText: 'Type your question here...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 120, // Giới hạn chiều cao tối đa
+                ),
+                child: TextField(
+                  controller: _messageController,
+                  maxLines: null, // Cho phép nhiều dòng
+                  minLines: 1, // Tối thiểu 1 dòng
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    hintText: 'Type your question here...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 4),
+            margin: const EdgeInsets.only(right: 4, bottom: 8),
             decoration: const BoxDecoration(
               color: customOrange,
               shape: BoxShape.circle,
