@@ -110,9 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Reminders':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const RemindersScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const RemindersScreen()),
         );
         break;
       default:
