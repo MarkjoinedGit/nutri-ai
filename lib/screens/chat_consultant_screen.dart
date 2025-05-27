@@ -87,13 +87,37 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
 
+  String _getAppBarTitle(ChatProvider chatProvider) {
+    // Nếu có topic từ conversation hiện tại
+    if (chatProvider.currentConversationTopic != null &&
+        chatProvider.currentConversationTopic!.isNotEmpty &&
+        chatProvider.currentConversationTopic != 'New Conversation') {
+      return chatProvider.currentConversationTopic!;
+    }
+
+    // Nếu có conversation đang hoạt động nhưng chưa có topic
+    if (chatProvider.currentConversationId != null) {
+      return 'Chat Consultation';
+    }
+
+    // Mặc định cho new chat
+    return 'Chat Consultation';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Chat Consultation',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+        title: Consumer<ChatProvider>(
+          builder: (context, chatProvider, child) {
+            return Text(
+              _getAppBarTitle(chatProvider),
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          },
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
@@ -216,7 +240,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -229,41 +253,30 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 120, // Giới hạn chiều cao tối đa
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  maxLines: null, // Cho phép nhiều dòng
-                  minLines: 1, // Tối thiểu 1 dòng
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    hintText: 'Type your question here...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
+              child: TextField(
+                controller: _messageController,
+                decoration: InputDecoration(
+                  hintText: 'Type your question here...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
                   ),
-                  style: const TextStyle(fontSize: 16),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 4, bottom: 8),
+            margin: const EdgeInsets.only(right: 4),
             decoration: const BoxDecoration(
               color: customOrange,
               shape: BoxShape.circle,
