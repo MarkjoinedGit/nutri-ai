@@ -10,12 +10,14 @@ class ChatProvider extends ChangeNotifier {
   List<Conversation> _conversations = [];
   List<ChatMessage> _currentConversationMessages = [];
   String? _currentConversationId;
+  String? _currentConversationTopic;
   User? _currentUser;
   bool _isLoading = false;
 
   List<Conversation> get conversations => _conversations;
   List<ChatMessage> get messages => _currentConversationMessages;
   String? get currentConversationId => _currentConversationId;
+  String? get currentConversationTopic => _currentConversationTopic;
   bool get isLoading => _isLoading;
 
   void setUser(User user) {
@@ -25,6 +27,7 @@ class ChatProvider extends ChangeNotifier {
 
   void startNewConversation() {
     _currentConversationId = null;
+    _currentConversationTopic = null;
     _currentConversationMessages.clear();
     notifyListeners();
   }
@@ -47,6 +50,19 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> selectConversation(String conversationId) async {
     _currentConversationId = conversationId;
+
+    // Tìm conversation để lấy topic
+    final selectedConversation = _conversations.firstWhere(
+      (conv) => conv.id == conversationId,
+      orElse:
+          () => Conversation(
+            id: conversationId,
+            userId: _currentUser?.id ?? '',
+            topic: 'Chat Consultation',
+          ),
+    );
+    _currentConversationTopic = selectedConversation.topic;
+
     _isLoading = true;
     notifyListeners();
 
@@ -76,6 +92,7 @@ class ChatProvider extends ChangeNotifier {
 
         if (_currentConversationId == conversationId) {
           _currentConversationId = null;
+          _currentConversationTopic = null;
           _currentConversationMessages.clear();
         }
       }
@@ -97,9 +114,9 @@ class ChatProvider extends ChangeNotifier {
         id: tempId,
         conversationId: _currentConversationId ?? tempId,
         userChat: message,
-        botChat: '', 
+        botChat: '',
         checkSearch: false,
-        isTyping: true, 
+        isTyping: true,
       );
 
       _currentConversationMessages.add(userMessage);
@@ -119,12 +136,8 @@ class ChatProvider extends ChangeNotifier {
 
         _currentConversationId = responseMessage.conversationId;
 
-        Conversation newConversation = Conversation(
-          id: responseMessage.conversationId,
-          userId: _currentUser!.id,
-          topic: "New Conversation", 
-        );
-        _conversations.add(newConversation);
+        // Reload conversations để lấy topic mới từ server
+        await _refreshConversationTopic(responseMessage.conversationId);
       }
 
       _currentConversationMessages = List.from(_currentConversationMessages);
@@ -140,6 +153,31 @@ class ChatProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // Handle error - maybe update the temporary message to show an error state
+    }
+  }
+
+  Future<void> _refreshConversationTopic(String conversationId) async {
+    try {
+      // Reload conversations để lấy topic mới
+      _conversations = await _apiService.getUserConversations(_currentUser!.id);
+
+      // Tìm conversation vừa tạo để lấy topic
+      final newConversation = _conversations.firstWhere(
+        (conv) => conv.id == conversationId,
+        orElse:
+            () => Conversation(
+              id: conversationId,
+              userId: _currentUser?.id ?? '',
+              topic: 'New Conversation',
+            ),
+      );
+
+      _currentConversationTopic = newConversation.topic;
+      notifyListeners();
+    } catch (e) {
+      // Fallback nếu không thể lấy topic
+      _currentConversationTopic = 'New Conversation';
+      notifyListeners();
     }
   }
 }
