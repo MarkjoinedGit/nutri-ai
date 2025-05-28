@@ -88,19 +88,16 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
   }
 
   String _getAppBarTitle(ChatProvider chatProvider) {
-    // Nếu có topic từ conversation hiện tại
     if (chatProvider.currentConversationTopic != null &&
         chatProvider.currentConversationTopic!.isNotEmpty &&
         chatProvider.currentConversationTopic != 'New Conversation') {
       return chatProvider.currentConversationTopic!;
     }
 
-    // Nếu có conversation đang hoạt động nhưng chưa có topic
     if (chatProvider.currentConversationId != null) {
       return 'Chat Consultation';
     }
 
-    // Mặc định cho new chat
     return 'Chat Consultation';
   }
 

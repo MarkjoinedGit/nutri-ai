@@ -9,12 +9,10 @@ class MedicalRecordProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Getters
   List<MedicalRecord> get records => _records;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Fetch medical records
   Future<void> fetchRecords(String userId) async {
     _setLoading(true);
     _clearError();
@@ -30,7 +28,6 @@ class MedicalRecordProvider with ChangeNotifier {
     }
   }
 
-  // Upload a new medical record
   Future<MedicalRecord?> uploadMedicalRecord(File image, String userId) async {
     _setLoading(true);
     _clearError();
@@ -46,7 +43,6 @@ class MedicalRecordProvider with ChangeNotifier {
     }
   }
 
-  // Update an existing medical record
   Future<bool> updateMedicalRecord(MedicalRecord record) async {
     _setLoading(true);
     _clearError();
@@ -54,7 +50,6 @@ class MedicalRecordProvider with ChangeNotifier {
     try {
       final updatedRecord = await _service.updateMedicalRecord(record);
       
-      // Update the record in the local list
       final index = _records.indexWhere((r) => r.id == updatedRecord.id);
       if (index != -1) {
         _records[index] = updatedRecord;
@@ -72,13 +67,11 @@ class MedicalRecordProvider with ChangeNotifier {
     }
   }
 
-  // Add a record to the local list (without API call)
   void addRecord(MedicalRecord record) {
     _records.add(record);
     notifyListeners();
   }
 
-  // Helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
