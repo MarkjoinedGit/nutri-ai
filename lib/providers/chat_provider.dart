@@ -51,7 +51,6 @@ class ChatProvider extends ChangeNotifier {
   Future<void> selectConversation(String conversationId) async {
     _currentConversationId = conversationId;
 
-    // Tìm conversation để lấy topic
     final selectedConversation = _conversations.firstWhere(
       (conv) => conv.id == conversationId,
       orElse:
@@ -136,7 +135,6 @@ class ChatProvider extends ChangeNotifier {
 
         _currentConversationId = responseMessage.conversationId;
 
-        // Reload conversations để lấy topic mới từ server
         await _refreshConversationTopic(responseMessage.conversationId);
       }
 
@@ -158,10 +156,8 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> _refreshConversationTopic(String conversationId) async {
     try {
-      // Reload conversations để lấy topic mới
       _conversations = await _apiService.getUserConversations(_currentUser!.id);
 
-      // Tìm conversation vừa tạo để lấy topic
       final newConversation = _conversations.firstWhere(
         (conv) => conv.id == conversationId,
         orElse:
@@ -175,7 +171,6 @@ class ChatProvider extends ChangeNotifier {
       _currentConversationTopic = newConversation.topic;
       notifyListeners();
     } catch (e) {
-      // Fallback nếu không thể lấy topic
       _currentConversationTopic = 'New Conversation';
       notifyListeners();
     }

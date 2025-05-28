@@ -39,7 +39,6 @@ class ReminderService {
       if (response.statusCode == 201) {
         final createdReminder = Reminder.fromJson(jsonDecode(response.body));
 
-        // Lên lịch thông báo cục bộ
         await _scheduleLocalNotification(createdReminder);
 
         return createdReminder;
@@ -62,7 +61,6 @@ class ReminderService {
       if (response.statusCode == 200) {
         final updatedReminder = Reminder.fromJson(jsonDecode(response.body));
 
-        // Hủy thông báo cũ và tạo thông báo mới
         await _notificationService.cancelNotification(id.hashCode);
         if (updatedReminder.status == ReminderStatus.active) {
           await _scheduleLocalNotification(updatedReminder);
@@ -82,7 +80,6 @@ class ReminderService {
       final response = await http.delete(Uri.parse('$baseUrl/reminders/$id'));
 
       if (response.statusCode == 200) {
-        // Hủy thông báo cục bộ
         await _notificationService.cancelNotification(id.hashCode);
       } else {
         throw Exception('Failed to delete reminder');
@@ -98,7 +95,6 @@ class ReminderService {
     final scheduledTime = DateTime.parse(reminder.time);
 
     if (reminder.repeat == RepeatType.none) {
-      // Thông báo một lần
       await _notificationService.scheduleReminder(
         id: reminder.id.hashCode,
         title: reminder.title,
@@ -107,7 +103,6 @@ class ReminderService {
         payload: reminder.id,
       );
     } else {
-      // Thông báo lặp lại
       RepeatInterval interval;
       switch (reminder.repeat) {
         case RepeatType.daily:
@@ -132,10 +127,8 @@ class ReminderService {
   }
 
   Future<void> syncRemindersWithNotifications(List<Reminder> reminders) async {
-    // Hủy tất cả thông báo hiện tại
     await _notificationService.cancelAllNotifications();
 
-    // Lên lịch lại cho các reminder active
     for (final reminder in reminders) {
       if (reminder.status == ReminderStatus.active) {
         await _scheduleLocalNotification(reminder);
