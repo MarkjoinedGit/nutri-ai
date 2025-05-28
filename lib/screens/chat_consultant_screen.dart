@@ -87,13 +87,37 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
 
+  String _getAppBarTitle(ChatProvider chatProvider) {
+    // Nếu có topic từ conversation hiện tại
+    if (chatProvider.currentConversationTopic != null &&
+        chatProvider.currentConversationTopic!.isNotEmpty &&
+        chatProvider.currentConversationTopic != 'New Conversation') {
+      return chatProvider.currentConversationTopic!;
+    }
+
+    // Nếu có conversation đang hoạt động nhưng chưa có topic
+    if (chatProvider.currentConversationId != null) {
+      return 'Chat Consultation';
+    }
+
+    // Mặc định cho new chat
+    return 'Chat Consultation';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Chat Consultation',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+        title: Consumer<ChatProvider>(
+          builder: (context, chatProvider, child) {
+            return Text(
+              _getAppBarTitle(chatProvider),
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          },
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
