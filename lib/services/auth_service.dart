@@ -84,5 +84,55 @@ class AuthService {
     } catch (e) {
       throw Exception('Logout failed: ${e.toString()}');
     }
+  } // Thêm method yêu cầu reset password
+
+  // Thêm method yêu cầu reset password
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode != 200) {
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
+        throw Exception(error['detail'] ?? 'Failed to send reset code');
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Network error occurred');
+    }
+  }
+
+  // Thêm method xác nhận reset password
+  Future<void> resetPassword(
+    String email,
+    String resetCode,
+    String newPassword,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'reset_code': resetCode,
+          'new_password': newPassword,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final error = jsonDecode(utf8.decode(response.bodyBytes));
+        throw Exception(error['detail'] ?? 'Failed to reset password');
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Network error occurred');
+    }
   }
 }
