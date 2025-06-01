@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -67,189 +70,251 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.orange.shade50],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 40),
-                AnimatedBuilder(
-                  animation: _imageAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _imageAnimation.value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - _imageAnimation.value)),
-                        child: child,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.orange.shade50],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Language toggle button
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => localizationProvider.toggleLanguage(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.language,
+                                    size: 16,
+                                    color: customOrange,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    localizationProvider.isVietnamese
+                                        ? 'EN'
+                                        : 'VI',
+                                    style: TextStyle(
+                                      color: customOrange,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                  child: Hero(
-                    tag: 'welcome_image',
-                    child: Container(
-                      height: screenSize.height * 0.3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                    ),
+                    const SizedBox(height: 20),
+                    AnimatedBuilder(
+                      animation: _imageAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _imageAnimation.value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - _imageAnimation.value)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Hero(
+                        tag: 'welcome_image',
+                        child: Container(
+                          height: screenSize.height * 0.3,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.asset(
+                              'assets/images/healthy_food.jpg',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    AnimatedBuilder(
+                      animation: _titleAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _titleAnimation.value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - _titleAnimation.value)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        strings.welcome,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: customOrange,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AnimatedBuilder(
+                      animation: _descriptionAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _descriptionAnimation.value,
+                          child: Transform.translate(
+                            offset: Offset(
+                              0,
+                              20 * (1 - _descriptionAnimation.value),
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        strings.welcomeDescription,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          height: 1.5,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    AnimatedBuilder(
+                      animation: _buttonAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _buttonAnimation.value,
+                          child: Transform.translate(
+                            offset: Offset(
+                              0,
+                              20 * (1 - _buttonAnimation.value),
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            height: 55,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: customOrange.withValues(alpha: 0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/login');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: customOrange,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: Text(
+                                strings.login,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            width: double.infinity,
+                            height: 55,
+                            margin: const EdgeInsets.only(bottom: 30),
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/register');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: customOrange,
+                                side: BorderSide(color: customOrange, width: 2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: Text(
+                                strings.register,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          'assets/images/healthy_food.jpg',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                AnimatedBuilder(
-                  animation: _titleAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _titleAnimation.value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - _titleAnimation.value)),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "Welcome!",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: customOrange,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                AnimatedBuilder(
-                  animation: _descriptionAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _descriptionAnimation.value,
-                      child: Transform.translate(
-                        offset: Offset(
-                          0,
-                          20 * (1 - _descriptionAnimation.value),
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Find smart and personalized nutrition tips made just for your health needs.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      height: 1.5,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                AnimatedBuilder(
-                  animation: _buttonAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _buttonAnimation.value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - _buttonAnimation.value)),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: customOrange.withValues(alpha: 0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/login');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: customOrange,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        height: 55,
-                        margin: const EdgeInsets.only(bottom: 30),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/register');
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: customOrange,
-                            side: BorderSide(color: customOrange, width: 2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            "Register",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

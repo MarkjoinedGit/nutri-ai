@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -45,22 +47,22 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return strings.pleaseEnterEmail;
     }
     final emailRegExp = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegExp.hasMatch(value)) {
-      return 'Please enter a valid email';
+      return strings.pleaseEnterValidEmail;
     }
     return null;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return strings.pleaseEnterPassword;
     }
     return null;
   }
@@ -111,51 +113,56 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: CustomScrollView(
-              slivers: [
-                SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 20),
-                    const Text("Welcome Back", style: headingStyle),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Sign in to continue your health journey",
-                      style: subtitleStyle,
-                    ),
-                    const SizedBox(height: 40),
-                    if (_errorMessage != null) _buildErrorMessage(),
-                    if (_errorMessage != null) const SizedBox(height: 20),
-                    _buildEmailField(),
-                    const SizedBox(height: 20),
-                    _buildPasswordField(),
-                    const SizedBox(height: 16),
-                    _buildForgotPasswordButton(),
-                    const SizedBox(height: 30),
-                    _buildLoginButton(),
-                    const SizedBox(height: 30),
-                    _buildRegisterRow(),
-                  ]),
-                ),
-              ],
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverList(
+                      delegate: SliverChildListDelegate([
+                        const SizedBox(height: 20),
+                        Text(strings.welcomeBack, style: headingStyle),
+                        const SizedBox(height: 8),
+                        Text(strings.signInToContinue, style: subtitleStyle),
+                        const SizedBox(height: 40),
+                        if (_errorMessage != null) _buildErrorMessage(),
+                        if (_errorMessage != null) const SizedBox(height: 20),
+                        _buildEmailField(strings),
+                        const SizedBox(height: 20),
+                        _buildPasswordField(strings),
+                        const SizedBox(height: 16),
+                        _buildForgotPasswordButton(strings),
+                        const SizedBox(height: 30),
+                        _buildLoginButton(strings),
+                        const SizedBox(height: 30),
+                        _buildRegisterRow(strings),
+                      ]),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -182,13 +189,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildEmailField(dynamic strings) {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
-        labelText: "Email",
-        hintText: "Enter your email",
+        labelText: strings.email,
+        hintText: strings.enterYourEmail,
         prefixIcon: const Icon(Icons.email_outlined),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
@@ -200,17 +207,17 @@ class _LoginScreenState extends State<LoginScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateEmail,
+      validator: (value) => _validateEmail(value, strings),
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(dynamic strings) {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
-        labelText: "Password",
-        hintText: "Enter your password",
+        labelText: strings.password,
+        hintText: strings.enterYourPassword,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
@@ -232,26 +239,29 @@ class _LoginScreenState extends State<LoginScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validatePassword,
+      validator: (value) => _validatePassword(value, strings),
     );
   }
 
-  Widget _buildForgotPasswordButton() {
+  Widget _buildForgotPasswordButton(dynamic strings) {
     return Align(
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () {
           // TODO: Implement forgot password
         },
-        child: const Text(
-          "Forgot Password?",
-          style: TextStyle(color: customOrange, fontWeight: FontWeight.w600),
+        child: Text(
+          strings.forgotPassword,
+          style: const TextStyle(
+            color: customOrange,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(dynamic strings) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -276,26 +286,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     strokeWidth: 2,
                   ),
                 )
-                : const Text("Sign In", style: buttonTextStyle),
+                : Text(strings.signIn, style: buttonTextStyle),
       ),
     );
   }
 
-  Widget _buildRegisterRow() {
+  Widget _buildRegisterRow(dynamic strings) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          "Don't have an account? ",
-          style: TextStyle(color: Colors.black54, fontSize: 16),
+        Text(
+          strings.dontHaveAccount,
+          style: const TextStyle(color: Colors.black54, fontSize: 16),
         ),
         TextButton(
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/register');
           },
-          child: const Text(
-            "Register",
-            style: TextStyle(
+          child: Text(
+            strings.register,
+            style: const TextStyle(
               color: customOrange,
               fontWeight: FontWeight.bold,
               fontSize: 16,
