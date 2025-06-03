@@ -74,7 +74,7 @@ class _RemindersScreenState extends State<RemindersScreen>
           'Nhắc nhở',
           style: TextStyle(
             color: Colors.black87,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
         ),
