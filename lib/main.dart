@@ -9,6 +9,7 @@ import 'providers/user_provider.dart';
 import 'providers/calorie_tracking_provider.dart';
 import 'providers/medical_record_provider.dart';
 import 'providers/reminder_provider.dart';
+import 'providers/localization_provider.dart';
 import 'services/notification_service.dart';
 
 void main() async {
@@ -19,6 +20,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => LocalizationProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CalorieTrackingProvider()),
@@ -69,12 +71,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkLoginStatus();
+      _initializeApp();
     });
   }
 
-  Future<void> _checkLoginStatus() async {
+  Future<void> _initializeApp() async {
     try {
+      // Load language first
+      final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
+      await localizationProvider.loadLanguage();
+      
+      // Then check login status
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final isAuthenticated = await userProvider.loadUserFromPrefs();
 

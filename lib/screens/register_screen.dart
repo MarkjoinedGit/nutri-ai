@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -49,47 +52,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  String? _validateName(String? value) {
+  String? _validateName(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your name';
+      return strings.pleaseEnterName;
     }
     return null;
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return strings.pleaseEnterEmail;
     }
     final emailRegExp = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegExp.hasMatch(value)) {
-      return 'Please enter a valid email';
+      return strings.pleaseEnterValidEmail;
     }
     return null;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return strings.pleaseEnterPassword;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return strings.passwordMinLength;
     }
     return null;
   }
 
-  String? _validateConfirmPassword(String? value) {
+  String? _validateConfirmPassword(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return strings.pleaseConfirmPassword;
     }
     if (value != _passwordController.text) {
-      return 'Passwords do not match';
+      return strings.passwordsDoNotMatch;
     }
     return null;
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(dynamic strings) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -106,12 +109,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             title: Wrap(
               spacing: 10,
               crossAxisAlignment: WrapCrossAlignment.center,
-              children: const [
-                Icon(Icons.check_circle, color: customOrange, size: 28),
+              children: [
+                const Icon(Icons.check_circle, color: customOrange, size: 28),
                 Flexible(
                   child: Text(
-                    "Registration Successful",
-                    style: TextStyle(
+                    strings.registrationSuccessful,
+                    style: const TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.bold,
                     ),
@@ -119,9 +122,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
-            content: const Text(
-              "Your account has been created successfully. Please sign in with your credentials.",
-              style: TextStyle(color: Colors.black54, fontSize: 16),
+            content: Text(
+              strings.accountCreatedSuccessfully,
+              style: const TextStyle(color: Colors.black54, fontSize: 16),
             ),
             actions: [
               TextButton(
@@ -129,9 +132,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Navigator.of(context).pop();
                   Navigator.pushReplacementNamed(context, '/login');
                 },
-                child: const Text(
-                  "Sign In",
-                  style: TextStyle(
+                child: Text(
+                  strings.signIn,
+                  style: const TextStyle(
                     color: customOrange,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -144,6 +147,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     if (!_formKey.currentState!.validate()) return;
 
     if (mounted) {
@@ -168,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _isLoading = false;
       });
 
-      _showSuccessDialog();
+      _showSuccessDialog(strings);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -181,55 +190,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: CustomScrollView(
-              slivers: [
-                SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 10),
-                    const Text("Create Account", style: headingStyle),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Sign up to start your health journey",
-                      style: subtitleStyle,
-                    ),
-                    const SizedBox(height: 30),
-                    if (_errorMessage != null) _buildErrorMessage(),
-                    if (_errorMessage != null) const SizedBox(height: 20),
-                    _buildNameField(),
-                    const SizedBox(height: 16),
-                    _buildEmailField(),
-                    const SizedBox(height: 16),
-                    _buildPasswordField(),
-                    const SizedBox(height: 16),
-                    _buildConfirmPasswordField(),
-                    const SizedBox(height: 20),
-                    _buildDoctorSwitch(),
-                    const SizedBox(height: 30),
-                    _buildRegisterButton(),
-                    const SizedBox(height: 30),
-                    _buildLoginRow(),
-                  ]),
-                ),
-              ],
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverList(
+                      delegate: SliverChildListDelegate([
+                        const SizedBox(height: 10),
+                        Text(strings.createAccount, style: headingStyle),
+                        const SizedBox(height: 8),
+                        Text(strings.signUpToStart, style: subtitleStyle),
+                        const SizedBox(height: 30),
+                        if (_errorMessage != null) _buildErrorMessage(),
+                        if (_errorMessage != null) const SizedBox(height: 20),
+                        _buildNameField(strings),
+                        const SizedBox(height: 16),
+                        _buildEmailField(strings),
+                        const SizedBox(height: 16),
+                        _buildPasswordField(strings),
+                        const SizedBox(height: 16),
+                        _buildConfirmPasswordField(strings),
+                        const SizedBox(height: 20),
+                        _buildDoctorSwitch(strings),
+                        const SizedBox(height: 30),
+                        _buildRegisterButton(strings),
+                        const SizedBox(height: 30),
+                        _buildLoginRow(strings),
+                      ]),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -256,12 +270,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildNameField() {
+  Widget _buildNameField(dynamic strings) {
     return TextFormField(
       controller: _nameController,
       decoration: InputDecoration(
-        labelText: "Full Name",
-        hintText: "Enter your full name",
+        labelText: strings.fullName,
+        hintText: strings.enterYourFullName,
         prefixIcon: const Icon(Icons.person_outline),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
@@ -273,17 +287,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateName,
+      validator: (value) => _validateName(value, strings),
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildEmailField(dynamic strings) {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
-        labelText: "Email",
-        hintText: "Enter your email",
+        labelText: strings.email,
+        hintText: strings.enterYourEmail,
         prefixIcon: const Icon(Icons.email_outlined),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
@@ -295,17 +309,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateEmail,
+      validator: (value) => _validateEmail(value, strings),
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(dynamic strings) {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
-        labelText: "Password",
-        hintText: "Enter your password",
+        labelText: strings.password,
+        hintText: strings.enterYourPassword,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
@@ -327,17 +341,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validatePassword,
+      validator: (value) => _validatePassword(value, strings),
     );
   }
 
-  Widget _buildConfirmPasswordField() {
+  Widget _buildConfirmPasswordField(dynamic strings) {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: !_isConfirmPasswordVisible,
       decoration: InputDecoration(
-        labelText: "Confirm Password",
-        hintText: "Confirm your password",
+        labelText: strings.confirmPassword,
+        hintText: strings.confirmYourPassword,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
@@ -359,19 +373,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateConfirmPassword,
+      validator: (value) => _validateConfirmPassword(value, strings),
     );
   }
 
-  Widget _buildDoctorSwitch() {
+  Widget _buildDoctorSwitch(dynamic strings) {
     return SwitchListTile(
-      title: const Text(
-        "Register as a Doctor",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      title: Text(
+        strings.registerAsDoctor,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
-      subtitle: const Text(
-        "Turn on if you are a healthcare professional",
-        style: TextStyle(fontSize: 14),
+      subtitle: Text(
+        strings.turnOnIfHealthcareProfessional,
+        style: const TextStyle(fontSize: 14),
       ),
       value: _isDoctor,
       onChanged: (value) {
@@ -388,7 +402,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(dynamic strings) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -413,26 +427,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     strokeWidth: 2,
                   ),
                 )
-                : const Text("Register", style: buttonTextStyle),
+                : Text(strings.register, style: buttonTextStyle),
       ),
     );
   }
 
-  Widget _buildLoginRow() {
+  Widget _buildLoginRow(dynamic strings) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          "Already have an account? ",
-          style: TextStyle(color: Colors.black54, fontSize: 16),
+        Text(
+          strings.alreadyHaveAccount,
+          style: const TextStyle(color: Colors.black54, fontSize: 16),
         ),
         TextButton(
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/login');
           },
-          child: const Text(
-            "Sign In",
-            style: TextStyle(
+          child: Text(
+            strings.signIn,
+            style: const TextStyle(
               color: customOrange,
               fontWeight: FontWeight.bold,
               fontSize: 16,
