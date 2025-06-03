@@ -159,12 +159,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          // Thêm SingleChildScrollView để tránh overflow
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Thêm để tối ưu không gian
               children: [
                 const SizedBox(height: 20),
                 Text(
@@ -182,36 +184,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       : 'Chúng tôi sẽ gửi mã reset qua email của bạn',
                   style: const TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30), // Giảm khoảng cách
 
                 if (_errorMessage != null) _buildErrorMessage(),
                 if (_successMessage != null) _buildSuccessMessage(),
                 if (_errorMessage != null || _successMessage != null)
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16), // Giảm khoảng cách
 
                 _buildEmailField(),
 
                 if (_codeSent) ...[
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16), // Giảm khoảng cách
                   _buildCodeField(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   _buildPasswordField(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   _buildConfirmPasswordField(),
                 ],
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 24), // Giảm khoảng cách
                 _buildActionButton(),
 
                 if (_codeSent) ...[
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   _buildResendButton(),
                 ],
+
+                // Thêm khoảng trống ở cuối để tránh bị che bởi keyboard
+                SizedBox(
+                  height:
+                      MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 20,
+                ),
               ],
             ),
           ),
         ),
       ),
+      // Thêm resizeToAvoidBottomInset để tự động điều chỉnh khi keyboard xuất hiện
+      resizeToAvoidBottomInset: true,
     );
   }
 
