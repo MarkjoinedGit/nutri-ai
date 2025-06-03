@@ -26,7 +26,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   bool _isAnalyzing = false;
   NutritionInfo? _nutritionInfo;
   DateTime _selectedDate = DateTime.now();
-  String _currentMealType = ''; 
+  String _currentMealType = '';
 
   static const Color customOrange = Color(0xFFE07E02);
 
@@ -301,7 +301,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       appBar: AppBar(
         title: const Text(
           'Calorie Tracking',
-          style: TextStyle(color: Colors.black87),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,

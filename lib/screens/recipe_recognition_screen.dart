@@ -130,7 +130,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       appBar: AppBar(
         title: const Text(
           'Recipe Recognition',
-          style: TextStyle(color: Colors.black87),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,

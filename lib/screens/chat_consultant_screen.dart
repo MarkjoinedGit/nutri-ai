@@ -257,7 +257,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
               child: TextField(
                 controller: _messageController,
                 maxLines: null, // Cho phép nhiều dòng
-                minLines: 1,   // Tối thiểu 1 dòng
+                minLines: 1, // Tối thiểu 1 dòng
                 keyboardType: TextInputType.multiline,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(

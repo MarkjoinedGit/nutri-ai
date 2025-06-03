@@ -215,7 +215,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: Colors.white,
             elevation: 0.5,
             actions: [
-              // Language button
               IconButton(
                 icon: const Icon(Icons.language, color: Colors.black87),
                 onPressed: _showLanguageBottomSheet,
@@ -348,13 +347,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: _buildFeatureCard(
-                                icon: Icons.restaurant_outlined,
-                                title: strings.mealPlans,
-                                backgroundColor: customOrange,
-                                iconColor: Colors.white,
-                                onTap: () => _navigateToFeature('Meal Plans'),
-                              ),
+                              child:
+                                  Container(),
                             ),
                           ],
                         ),
