@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import './dashboard_home_widget.dart';
-import './user_profile_widget.dart';
 import './notification_screen.dart';
+import '../widgets/dashboard_home_widget.dart';
+import '../widgets/user_profile_widget.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../providers/user_provider.dart';
@@ -41,24 +41,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context,
       listen: false,
     );
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
 
     notificationProvider.addNotification(
       id: 1,
-      title: 'Reminder: Take your vitamins',
-      body: 'Time to take your daily vitamins for better health!',
+      title: strings.reminderTakeVitamins,
+      body: strings.reminderTakeVitaminsBody,
     );
 
     notificationProvider.addNotification(
       id: 2,
-      title: 'Meal tracking reminder',
-      body: "Don't forget to log your lunch today.",
+      title: strings.mealTrackingReminder,
+      body: strings.mealTrackingReminderBody,
     );
 
     notificationProvider.addNotification(
       id: 3,
-      title: 'Health tip of the day',
-      body:
-          'Drinking water first thing in the morning can boost your metabolism.',
+      title: strings.healthTipOfTheDay,
+      body: strings.healthTipOfTheDayBody,
     );
   }
 
@@ -278,8 +282,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onPressed: () {
                       NotificationService().showInstantNotification(
                         id: DateTime.now().millisecondsSinceEpoch,
-                        title: 'Test Notification',
-                        body: 'This is a test notification from the app!',
+                        title: strings.testNotification,
+                        body: strings.testNotificationBody,
                       );
                     },
                     backgroundColor: customOrange,

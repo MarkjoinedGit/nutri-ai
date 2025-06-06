@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
 import '../services/recipe_service.dart';
 import '../models/nutrition_info_model.dart';
 import '../widgets/recipe_result_widget.dart';
 import '../widgets/nutrition_info_widget.dart';
 import '../utils/image_validation_util.dart';
+import '../utils/app_strings.dart';
 
 class RecipeRecognitionScreen extends StatefulWidget {
   const RecipeRecognitionScreen({super.key});
@@ -30,6 +32,12 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
   static const Color customOrange = Color(0xFFE07E02);
 
   Future<void> _getImage(ImageSource source) async {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -42,7 +50,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
 
       if (!imageFile.isValidImage) {
         setState(() {
-          _errorMessage = 'The selected file is not a valid image.';
+          _errorMessage = strings.invalidImage;
         });
         return;
       }
@@ -57,7 +65,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       _analyzeImage();
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to select image: ${e.toString()}';
+        _errorMessage = '${strings.invalidImage} ${e.toString()}';
       });
     }
   }
@@ -66,9 +74,14 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
     if (_image == null) return;
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
     if (!userProvider.isLoggedIn || userProvider.currentUser == null) {
       setState(() {
-        _errorMessage = 'User not logged in. Please log in again.';
+        _errorMessage = strings.userNotLoggedIn;
       });
       return;
     }
@@ -94,7 +107,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Error analyzing nutrition: ${e.toString()}';
+          _errorMessage = '${strings.errorAnalyzingNutrition} ${e.toString()}';
           _isLoadingNutrition = false;
         });
       }
@@ -111,7 +124,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Error generating recipe: ${e.toString()}';
+          _errorMessage = '${strings.errorGeneratingRecipe} ${e.toString()}';
           _isLoadingRecipe = false;
         });
       }
@@ -126,117 +139,127 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Recipe Recognition',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child:
-                    _image == null
-                        ? Center(
-                          child: Text(
-                            'No image selected',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        )
-                        : ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _image!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          ),
-                        ),
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              strings.recipeRecognitionInLine,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 16),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0.5,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: customOrange,
-                      foregroundColor: Colors.white,
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: () => _getImage(ImageSource.camera),
+                    child:
+                        _image == null
+                            ? Center(
+                              child: Text(
+                                strings.noImageSelected,
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            )
+                            : ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                _image!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            ),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundColor: Colors.black87,
-                    ),
-                    onPressed: () => _getImage(ImageSource.gallery),
-                  ),
-                ],
-              ),
+                  const SizedBox(height: 16),
 
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red.shade800),
-                  ),
-                ),
-              ],
-
-              if (_isAnalyzing) ...[
-                const SizedBox(height: 24),
-                const Center(
-                  child: Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(color: customOrange),
-                      SizedBox(height: 16),
-                      Text('Analyzing image...'),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.camera_alt),
+                        label: Text(strings.camera),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customOrange,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => _getImage(ImageSource.camera),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.photo_library),
+                        label: Text(strings.gallery),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade300,
+                          foregroundColor: Colors.black87,
+                        ),
+                        onPressed: () => _getImage(ImageSource.gallery),
+                      ),
                     ],
                   ),
-                ),
-              ],
 
-              if (_nutritionInfo != null) ...[
-                const SizedBox(height: 24),
-                NutritionInfoWidget(nutritionInfo: _nutritionInfo!),
-              ],
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade800),
+                      ),
+                    ),
+                  ],
 
-              if (_recipeResult != null) ...[
-                const SizedBox(height: 24),
-                RecipeResultWidget(recipeResult: _recipeResult!),
-              ],
-            ],
+                  if (_isAnalyzing) ...[
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Column(
+                        children: [
+                          const CircularProgressIndicator(color: customOrange),
+                          const SizedBox(height: 16),
+                          Text(strings.analyzingImage),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  if (_nutritionInfo != null) ...[
+                    const SizedBox(height: 24),
+                    NutritionInfoWidget(nutritionInfo: _nutritionInfo!),
+                  ],
+
+                  if (_recipeResult != null) ...[
+                    const SizedBox(height: 24),
+                    RecipeResultWidget(recipeResult: _recipeResult!),
+                  ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

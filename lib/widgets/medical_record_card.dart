@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/medical_record_model.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class MedicalRecordCard extends StatelessWidget {
   final MedicalRecord record;
@@ -14,46 +17,62 @@ class MedicalRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    record.patientName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        record.patientName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: customOrange),
+                      onPressed: onEdit,
+                      tooltip: strings.editRecord,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: customOrange),
-                  onPressed: onEdit,
-                  tooltip: 'Edit Record',
+                const Divider(),
+                _buildInfoRow(strings.age, record.age),
+                _buildInfoRow(strings.gender, record.gender),
+                _buildInfoRow(strings.admissionDate, record.admissionDatetime),
+                _buildInfoRow(strings.reason, record.reasonForAdmission),
+                _buildInfoRow(
+                  strings.preliminaryDiagnosis,
+                  record.preliminaryDiagnosis,
                 ),
+                _buildInfoRow(
+                  strings.confirmedDiagnosis,
+                  record.confirmedDiagnosis,
+                ),
+                _buildInfoRow(strings.treatmentPlan, record.treatmentPlan),
               ],
             ),
-            const Divider(),
-            _buildInfoRow('Age', record.age),
-            _buildInfoRow('Gender', record.gender),
-            _buildInfoRow('Admission Date', record.admissionDatetime),
-            _buildInfoRow('Reason', record.reasonForAdmission),
-            _buildInfoRow('Preliminary Diagnosis', record.preliminaryDiagnosis),
-            _buildInfoRow('Confirmed Diagnosis', record.confirmedDiagnosis),
-            _buildInfoRow('Treatment Plan', record.treatmentPlan),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

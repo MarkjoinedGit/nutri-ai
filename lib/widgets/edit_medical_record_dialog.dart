@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/medical_record_model.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class EditMedicalRecordDialog extends StatefulWidget {
   final MedicalRecord record;
@@ -86,157 +89,176 @@ class _EditMedicalRecordDialogState extends State<EditMedicalRecordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Edit Medical Record',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          strings.editMedicalRecord,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _patientNameController,
+                      label: strings.patientName,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterPatientName;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _ageController,
+                            label: strings.age,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return strings.pleaseEnterAge;
+                              }
+                              return null;
+                            },
+                            strings: strings,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _genderController,
+                            label: strings.gender,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return strings.pleaseEnterGender;
+                              }
+                              return null;
+                            },
+                            strings: strings,
+                          ),
+                        ),
+                      ],
+                    ),
+                    _buildTextField(
+                      controller: _admissionDateController,
+                      label: strings.admissionDate,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterAdmissionDate;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    _buildTextField(
+                      controller: _reasonController,
+                      label: strings.reasonForAdmission,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterReasonForAdmission;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    _buildTextField(
+                      controller: _preliminaryDiagnosisController,
+                      label: strings.preliminaryDiagnosis,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterPreliminaryDiagnosis;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    _buildTextField(
+                      controller: _confirmedDiagnosisController,
+                      label: strings.confirmedDiagnosis,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterConfirmedDiagnosis;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    _buildTextField(
+                      controller: _treatmentPlanController,
+                      label: strings.treatmentPlan,
+                      maxLines: 3,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return strings.pleaseEnterTreatmentPlan;
+                        }
+                        return null;
+                      },
+                      strings: strings,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customOrange,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          strings.saveChanges,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _patientNameController,
-                  label: 'Patient Name',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter patient name';
-                    }
-                    return null;
-                  },
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _ageController,
-                        label: 'Age',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter age';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _genderController,
-                        label: 'Gender',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter gender';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                _buildTextField(
-                  controller: _admissionDateController,
-                  label: 'Admission Date',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter admission date';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _reasonController,
-                  label: 'Reason for Admission',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter reason for admission';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _preliminaryDiagnosisController,
-                  label: 'Preliminary Diagnosis',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter preliminary diagnosis';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _confirmedDiagnosisController,
-                  label: 'Confirmed Diagnosis',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter confirmed diagnosis';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _treatmentPlanController,
-                  label: 'Treatment Plan',
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter treatment plan';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: customOrange,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Save Changes',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
+    required dynamic strings,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {

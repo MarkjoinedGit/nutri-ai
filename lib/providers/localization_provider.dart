@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalizationProvider extends ChangeNotifier {
-  String _currentLanguage = 'vi'; // Mặc định tiếng Việt
+  String _currentLanguage = 'vi';
   static const String _languageKey = 'selected_language';
 
   String get currentLanguage => _currentLanguage;
   bool get isVietnamese => _currentLanguage == 'vi';
   bool get isEnglish => _currentLanguage == 'en';
 
-  // Load ngôn ngữ đã lưu từ SharedPreferences
   Future<void> loadLanguage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -20,7 +19,6 @@ class LocalizationProvider extends ChangeNotifier {
     }
   }
 
-  // Thay đổi ngôn ngữ và lưu vào SharedPreferences
   Future<void> changeLanguage(String languageCode) async {
     if (languageCode != _currentLanguage) {
       _currentLanguage = languageCode;
@@ -36,7 +34,6 @@ class LocalizationProvider extends ChangeNotifier {
     }
   }
 
-  // Toggle giữa tiếng Việt và tiếng Anh
   Future<void> toggleLanguage() async {
     final newLanguage = _currentLanguage == 'vi' ? 'en' : 'vi';
     await changeLanguage(newLanguage);

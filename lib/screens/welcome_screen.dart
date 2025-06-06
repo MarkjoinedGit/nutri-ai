@@ -92,7 +92,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Language toggle button
                     Align(
                       alignment: Alignment.topRight,
                       child: Padding(

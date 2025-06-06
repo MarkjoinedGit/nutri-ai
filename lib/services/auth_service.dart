@@ -84,9 +84,8 @@ class AuthService {
     } catch (e) {
       throw Exception('Logout failed: ${e.toString()}');
     }
-  } // Thêm method yêu cầu reset password
+  }
 
-  // Thêm method yêu cầu reset password
   Future<void> requestPasswordReset(String email) async {
     try {
       final response = await http.post(
@@ -107,7 +106,6 @@ class AuthService {
     }
   }
 
-  // Thêm method xác nhận reset password
   Future<void> resetPassword(
     String email,
     String resetCode,

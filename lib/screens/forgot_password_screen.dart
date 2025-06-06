@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -33,50 +36,50 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Vui lòng nhập email';
+      return strings.pleaseEnterEmail;
     }
     final emailRegExp = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegExp.hasMatch(value)) {
-      return 'Email không hợp lệ';
+      return strings.invalidEmail;
     }
     return null;
   }
 
-  String? _validateCode(String? value) {
+  String? _validateCode(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Vui lòng nhập mã reset';
+      return strings.pleaseEnterResetCode;
     }
     if (value.length != 6) {
-      return 'Mã reset phải có 6 số';
+      return strings.resetCodeMustBe6Digits;
     }
     return null;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Vui lòng nhập mật khẩu mới';
+      return strings.pleaseEnterNewPassword;
     }
     if (value.length < 6) {
-      return 'Mật khẩu phải có ít nhất 6 ký tự';
+      return strings.passwordMustBeAtLeast6Characters;
     }
     return null;
   }
 
-  String? _validateConfirmPassword(String? value) {
+  String? _validateConfirmPassword(String? value, dynamic strings) {
     if (value == null || value.isEmpty) {
-      return 'Vui lòng xác nhận mật khẩu';
+      return strings.pleaseConfirmPassword;
     }
     if (value != _passwordController.text) {
-      return 'Mật khẩu xác nhận không khớp';
+      return strings.confirmPasswordDoesNotMatch;
     }
     return null;
   }
 
-  Future<void> _sendResetCode() async {
+  Future<void> _sendResetCode(dynamic strings) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -91,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       setState(() {
         _codeSent = true;
-        _successMessage = 'Mã reset đã được gửi qua email';
+        _successMessage = strings.resetCodeSentToEmail;
       });
     } catch (e) {
       setState(() {
@@ -104,7 +107,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
   }
 
-  Future<void> _resetPassword() async {
+  Future<void> _resetPassword(dynamic strings) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -121,11 +124,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _passwordController.text,
       );
 
-      // Hiển thị thông báo thành công và quay về login
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đặt lại mật khẩu thành công!'),
+          SnackBar(
+            content: Text(strings.passwordResetSuccessful),
             backgroundColor: Colors.green,
           ),
         );
@@ -144,84 +146,99 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Quên mật khẩu',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          // Thêm SingleChildScrollView để tránh overflow
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // Thêm để tối ưu không gian
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  _codeSent ? 'Nhập mã reset' : 'Nhập email của bạn',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: customOrange,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _codeSent
-                      ? 'Nhập mã 6 số đã được gửi qua email và mật khẩu mới'
-                      : 'Chúng tôi sẽ gửi mã reset qua email của bạn',
-                  style: const TextStyle(fontSize: 16, color: Colors.black54),
-                ),
-                const SizedBox(height: 30), // Giảm khoảng cách
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
 
-                if (_errorMessage != null) _buildErrorMessage(),
-                if (_successMessage != null) _buildSuccessMessage(),
-                if (_errorMessage != null || _successMessage != null)
-                  const SizedBox(height: 16), // Giảm khoảng cách
-
-                _buildEmailField(),
-
-                if (_codeSent) ...[
-                  const SizedBox(height: 16), // Giảm khoảng cách
-                  _buildCodeField(),
-                  const SizedBox(height: 16),
-                  _buildPasswordField(),
-                  const SizedBox(height: 16),
-                  _buildConfirmPasswordField(),
-                ],
-
-                const SizedBox(height: 24), // Giảm khoảng cách
-                _buildActionButton(),
-
-                if (_codeSent) ...[
-                  const SizedBox(height: 16),
-                  _buildResendButton(),
-                ],
-
-                // Thêm khoảng trống ở cuối để tránh bị che bởi keyboard
-                SizedBox(
-                  height:
-                      MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 20,
-                ),
-              ],
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              strings.forgotPasswordTitle,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-      ),
-      // Thêm resizeToAvoidBottomInset để tự động điều chỉnh khi keyboard xuất hiện
-      resizeToAvoidBottomInset: true,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      _codeSent
+                          ? strings.enterResetCodeTitle
+                          : strings.enterYourEmailTitle,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: customOrange,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _codeSent
+                          ? strings.enterCodeAndPasswordDescription
+                          : strings.sendResetCodeDescription,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    if (_errorMessage != null) _buildErrorMessage(),
+                    if (_successMessage != null) _buildSuccessMessage(),
+                    if (_errorMessage != null || _successMessage != null)
+                      const SizedBox(height: 16),
+
+                    _buildEmailField(strings),
+
+                    if (_codeSent) ...[
+                      const SizedBox(height: 16),
+                      _buildCodeField(strings),
+                      const SizedBox(height: 16),
+                      _buildPasswordField(strings),
+                      const SizedBox(height: 16),
+                      _buildConfirmPasswordField(strings),
+                    ],
+
+                    const SizedBox(height: 24),
+                    _buildActionButton(strings),
+
+                    if (_codeSent) ...[
+                      const SizedBox(height: 16),
+                      _buildResendButton(strings),
+                    ],
+
+                    SizedBox(
+                      height:
+                          MediaQuery.of(context).viewInsets.bottom > 0
+                              ? 100
+                              : 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          resizeToAvoidBottomInset: true,
+        );
+      },
     );
   }
 
@@ -271,14 +288,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildEmailField(dynamic strings) {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       enabled: !_codeSent,
       decoration: InputDecoration(
-        labelText: "Email",
-        hintText: "Nhập email của bạn",
+        labelText: strings.email,
+        hintText: strings.enterYourEmail,
         prefixIcon: const Icon(Icons.email_outlined),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
@@ -294,18 +311,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
       ),
-      validator: _validateEmail,
+      validator: (value) => _validateEmail(value, strings),
     );
   }
 
-  Widget _buildCodeField() {
+  Widget _buildCodeField(dynamic strings) {
     return TextFormField(
       controller: _codeController,
       keyboardType: TextInputType.number,
       maxLength: 6,
       decoration: InputDecoration(
-        labelText: "Mã reset",
-        hintText: "Nhập mã 6 số",
+        labelText: strings.resetCode,
+        hintText: strings.enterSixDigitCode,
         prefixIcon: const Icon(Icons.security),
         counterText: "",
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
@@ -318,17 +335,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateCode,
+      validator: (value) => _validateCode(value, strings),
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(dynamic strings) {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
-        labelText: "Mật khẩu mới",
-        hintText: "Nhập mật khẩu mới",
+        labelText: strings.newPassword,
+        hintText: strings.enterNewPassword,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
@@ -347,17 +364,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validatePassword,
+      validator: (value) => _validatePassword(value, strings),
     );
   }
 
-  Widget _buildConfirmPasswordField() {
+  Widget _buildConfirmPasswordField(dynamic strings) {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: !_isConfirmPasswordVisible,
       decoration: InputDecoration(
-        labelText: "Xác nhận mật khẩu",
-        hintText: "Nhập lại mật khẩu mới",
+        labelText: strings.confirmPassword,
+        hintText: strings.enterNewPasswordAgain,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
@@ -378,17 +395,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderSide: const BorderSide(color: customOrange),
         ),
       ),
-      validator: _validateConfirmPassword,
+      validator: (value) => _validateConfirmPassword(value, strings),
     );
   }
 
-  Widget _buildActionButton() {
+  Widget _buildActionButton(dynamic strings) {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
         onPressed:
-            _isLoading ? null : (_codeSent ? _resetPassword : _sendResetCode),
+            _isLoading
+                ? null
+                : (_codeSent
+                    ? () => _resetPassword(strings)
+                    : () => _sendResetCode(strings)),
         style: ElevatedButton.styleFrom(
           backgroundColor: customOrange,
           foregroundColor: Colors.white,
@@ -408,7 +429,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 )
                 : Text(
-                  _codeSent ? 'Đặt lại mật khẩu' : 'Gửi mã reset',
+                  _codeSent ? strings.resetPassword : strings.sendResetCode,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -418,7 +439,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildResendButton() {
+  Widget _buildResendButton(dynamic strings) {
     return Center(
       child: TextButton(
         onPressed: () {
@@ -431,9 +452,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             _successMessage = null;
           });
         },
-        child: const Text(
-          'Gửi lại mã?',
-          style: TextStyle(color: customOrange, fontWeight: FontWeight.w600),
+        child: Text(
+          strings.resendCode,
+          style: const TextStyle(
+            color: customOrange,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
