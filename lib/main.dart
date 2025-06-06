@@ -11,6 +11,7 @@ import 'providers/calorie_tracking_provider.dart';
 import 'providers/medical_record_provider.dart';
 import 'providers/reminder_provider.dart';
 import 'providers/localization_provider.dart';
+import 'providers/notification_provider.dart';
 import 'services/notification_service.dart';
 
 void main() async {
@@ -27,6 +28,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CalorieTrackingProvider()),
         ChangeNotifierProvider(create: (_) => MedicalRecordProvider()),
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const NutriAI(),
     ),
@@ -79,11 +81,29 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _initializeApp() async {
     try {
-      // Load language first
-      final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
+      if (!mounted) return;
+
+      final localizationProvider = Provider.of<LocalizationProvider>(
+        context,
+        listen: false,
+      );
       await localizationProvider.loadLanguage();
-      
-      // Then check login status
+
+      if (!mounted) return;
+
+      final notificationProvider = Provider.of<NotificationProvider>(
+        context,
+        listen: false,
+      );
+
+      await notificationProvider.initialize();
+
+      NotificationService().setNotificationProvider(notificationProvider);
+
+      await _addSampleNotificationsIfNeeded(notificationProvider);
+
+      if (!mounted) return;
+
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final isAuthenticated = await userProvider.loadUserFromPrefs();
 
@@ -103,10 +123,48 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
   }
 
+  Future<void> _addSampleNotificationsIfNeeded(
+    NotificationProvider provider,
+  ) async {
+    if (provider.notifications.isEmpty) {
+      await provider.addNotification(
+        id: 1,
+        title: 'Welcome to NutriAI!',
+        body: 'Start your healthy journey with us today',
+      );
+
+      await provider.addNotification(
+        id: 2,
+        title: 'Daily Reminder',
+        body: 'Don\'t forget to log your meals and track your progress',
+      );
+
+      await provider.addNotification(
+        id: 3,
+        title: 'Health Tip',
+        body: 'Drink at least 8 glasses of water daily for better health',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFFE07E02)),
+              SizedBox(height: 16),
+              Text(
+                'Loading...',
+                style: TextStyle(color: Color(0xFFE07E02), fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return _isAuthenticated ? const DashboardScreen() : const WelcomeScreen();

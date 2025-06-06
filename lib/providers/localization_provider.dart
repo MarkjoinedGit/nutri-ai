@@ -30,7 +30,6 @@ class LocalizationProvider extends ChangeNotifier {
         await prefs.setString(_languageKey, languageCode);
       } catch (e) {
         // Xử lý lỗi nếu cần
-        print('Error saving language: $e');
       }
 
       notifyListeners();

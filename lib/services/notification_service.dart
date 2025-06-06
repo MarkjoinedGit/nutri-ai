@@ -2,6 +2,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
+import '../providers/notification_provider.dart';
+
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -10,6 +14,12 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  NotificationProvider? _notificationProvider;
+
+  void setNotificationProvider(NotificationProvider provider) {
+    _notificationProvider = provider;
+  }
 
   Future<void> initialize() async {
     tz.initializeTimeZones();
@@ -24,6 +34,7 @@ class NotificationService {
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     await _requestPermissions();
@@ -40,6 +51,9 @@ class NotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
+    final notificationId = response.id ?? 0;
+
+    _notificationProvider?.markAsRead(notificationId);
   }
 
   Future<void> scheduleReminder({
@@ -82,6 +96,8 @@ class NotificationService {
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+
+    _scheduleNotificationCallback(id, title, body, scheduledTime, payload);
   }
 
   Future<void> scheduleRepeatingReminder({
@@ -124,6 +140,107 @@ class NotificationService {
       matchDateTimeComponents: _getDateTimeComponents(repeatInterval),
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+
+    _scheduleRepeatingNotificationCallback(
+      id,
+      title,
+      body,
+      scheduledTime,
+      repeatInterval,
+      payload,
+    );
+  }
+
+  void _scheduleNotificationCallback(
+    int id,
+    String title,
+    String body,
+    DateTime scheduledTime,
+    String? payload,
+  ) {
+    final now = DateTime.now();
+    final delay = scheduledTime.difference(now);
+
+    if (delay.isNegative) return;
+
+    Future.delayed(delay, () {
+      _addToNotificationList(id, title, body, payload);
+    });
+  }
+
+  void _scheduleRepeatingNotificationCallback(
+    int id,
+    String title,
+    String body,
+    DateTime scheduledTime,
+    RepeatInterval repeatInterval,
+    String? payload,
+  ) {
+    _scheduleNotificationCallback(id, title, body, scheduledTime, payload);
+
+    Duration repeatDuration;
+    switch (repeatInterval) {
+      case RepeatInterval.daily:
+        repeatDuration = const Duration(days: 1);
+        break;
+      case RepeatInterval.weekly:
+        repeatDuration = const Duration(days: 7);
+        break;
+      default:
+        repeatDuration = const Duration(days: 1);
+    }
+
+    for (int i = 1; i <= 30; i++) {
+      final nextTime = scheduledTime.add(repeatDuration * i);
+      _scheduleNotificationCallback(id, title, body, nextTime, payload);
+    }
+  }
+
+  Future<void> showInstantNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'general_channel',
+          'General',
+          channelDescription: 'Channel for general notifications',
+          importance: Importance.max,
+          priority: Priority.max,
+          playSound: true,
+          enableVibration: true,
+          icon: '@mipmap/ic_launcher',
+        );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      notificationDetails,
+      payload: payload,
+    );
+
+    _addToNotificationList(id, title, body, payload);
+  }
+
+  void _addToNotificationList(
+    int id,
+    String title,
+    String body,
+    String? payload,
+  ) {
+    _notificationProvider?.addNotification(
+      id: id,
+      title: title,
+      body: body,
+      payload: payload,
     );
   }
 
