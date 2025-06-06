@@ -37,6 +37,9 @@ class StringsVi {
   String get vietnamese => "Tiếng Việt";
   String get english => "English";
 
+  // User
+  String get healthRecords => "Giám sát sức khỏe";
+
   // Login Screen
   String get welcomeBack => "Chào mừng trở lại";
   String get signInToContinue =>
