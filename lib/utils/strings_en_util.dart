@@ -36,6 +36,9 @@ class StringsEn {
   String get vietnamese => "Tiếng Việt";
   String get english => "English";
 
+  // User
+  String get healthRecords => "Health Records";
+
   // Login Screen
   String get welcomeBack => "Welcome Back";
   String get signInToContinue => "Sign in to continue your health journey";
