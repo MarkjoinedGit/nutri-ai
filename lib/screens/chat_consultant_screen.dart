@@ -209,6 +209,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Padding(
@@ -256,8 +257,8 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
               padding: const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _messageController,
-                maxLines: null, 
-                minLines: 1, 
+                maxLines: null,
+                minLines: 1,
                 keyboardType: TextInputType.multiline,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
