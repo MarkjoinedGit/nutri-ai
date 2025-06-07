@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import './health_monitoring_screen.dart';
+import '../screens/health_monitoring_screen.dart';
 import '../services/auth_service.dart';
 import '../providers/user_provider.dart';
 import '../providers/localization_provider.dart';

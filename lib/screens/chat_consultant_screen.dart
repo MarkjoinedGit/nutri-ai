@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
 import '../widgets/chat_message_widget.dart';
 import '../screens/conversation_screen.dart';
+import '../utils/app_strings.dart';
 
 class ChatConsultantScreen extends StatefulWidget {
   final String? conversationId;
@@ -87,85 +89,83 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
 
-  String _getAppBarTitle(ChatProvider chatProvider) {
+  String _getAppBarTitle(ChatProvider chatProvider, dynamic strings) {
     if (chatProvider.currentConversationTopic != null &&
         chatProvider.currentConversationTopic!.isNotEmpty &&
-        chatProvider.currentConversationTopic != 'New Conversation') {
+        chatProvider.currentConversationTopic != strings.newConversation) {
       return chatProvider.currentConversationTopic!;
     }
 
     if (chatProvider.currentConversationId != null) {
-      return 'Chat Consultation';
+      return strings.chatConsultationInLIne;
     }
 
-    return 'Chat Consultation';
+    return strings.chatConsultationInLIne;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Consumer<ChatProvider>(
-          builder: (context, chatProvider, child) {
-            return Text(
-              _getAppBarTitle(chatProvider),
+    return Consumer2<ChatProvider, LocalizationProvider>(
+      builder: (context, chatProvider, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              _getAppBarTitle(chatProvider, strings),
               style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
-            );
-          },
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: _navigateToDashboard,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.black87),
-            tooltip: 'View conversation history',
-            onPressed: _openConversationHistory,
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0.5,
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: _navigateToDashboard,
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.history, color: Colors.black87),
+                tooltip: strings.viewConversationHistory,
+                onPressed: _openConversationHistory,
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_comment, color: Colors.black87),
+                tooltip: strings.startNewConversation,
+                onPressed: () {
+                  final chatProvider = Provider.of<ChatProvider>(
+                    context,
+                    listen: false,
+                  );
+                  chatProvider.startNewConversation();
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.add_comment, color: Colors.black87),
-            tooltip: 'Start new conversation',
-            onPressed: () {
-              final chatProvider = Provider.of<ChatProvider>(
-                context,
-                listen: false,
-              );
-              chatProvider.startNewConversation();
-            },
-          ),
-        ],
-      ),
-      body: Consumer<ChatProvider>(
-        builder: (context, chatProvider, child) {
-          final messages = chatProvider.messages;
-
-          return Column(
+          body: Column(
             children: [
               Expanded(
                 child:
                     chatProvider.isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : messages.isEmpty
-                        ? _buildEmptyState()
+                        : chatProvider.messages.isEmpty
+                        ? _buildEmptyState(strings)
                         : ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: messages.length * 2,
+                          itemCount: chatProvider.messages.length * 2,
                           itemBuilder: (context, index) {
                             final messageIndex = index ~/ 2;
                             final isUserMessage = index % 2 == 0;
 
-                            final message = messages[messageIndex];
+                            final message = chatProvider.messages[messageIndex];
 
                             if (!isUserMessage &&
-                                messageIndex >= messages.length) {
+                                messageIndex >= chatProvider.messages.length) {
                               return const SizedBox.shrink();
                             }
 
@@ -183,15 +183,15 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
                           },
                         ),
               ),
-              _buildMessageInput(),
+              _buildMessageInput(strings),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(dynamic strings) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -202,20 +202,20 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
             color: customOrange.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Chat with your NutriAI Consultant',
-            style: TextStyle(
+          Text(
+            strings.chatWithNutriAI,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Ask any nutrition questions, get meal recommendations, or discuss your diet goals',
-              style: TextStyle(fontSize: 16, color: Colors.black54),
+              strings.askNutritionQuestions,
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
           ),
@@ -223,7 +223,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
           ElevatedButton.icon(
             onPressed: _openConversationHistory,
             icon: const Icon(Icons.history),
-            label: const Text('View Previous Consultations'),
+            label: Text(strings.viewPreviousConsultations),
             style: ElevatedButton.styleFrom(
               backgroundColor: customOrange,
               foregroundColor: Colors.white,
@@ -235,7 +235,7 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(dynamic strings) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       decoration: BoxDecoration(
@@ -256,12 +256,12 @@ class _ChatConsultantScreenState extends State<ChatConsultantScreen> {
               padding: const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _messageController,
-                maxLines: null, // Cho phép nhiều dòng
-                minLines: 1, // Tối thiểu 1 dòng
+                maxLines: null, 
+                minLines: 1, 
                 keyboardType: TextInputType.multiline,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
-                  hintText: 'Type your question here...',
+                  hintText: strings.typeYourQuestion,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/reminder_model.dart';
+import '../providers/localization_provider.dart';
+import './app_strings.dart';
 
 class ReminderUtils {
   static DateTime parseReminderTime(String timeString) {
@@ -45,31 +48,41 @@ class ReminderUtils {
     }
   }
 
-  static String getReminderTypeText(ReminderType type) {
+  static String getReminderTypeText(ReminderType type, BuildContext context) {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
     switch (type) {
       case ReminderType.water:
-        return 'Uống nước';
+        return strings.reminderTypeWater;
       case ReminderType.mainMeal:
-        return 'Bữa chính';
+        return strings.reminderTypeMainMeal;
       case ReminderType.snack:
-        return 'Bữa phụ';
+        return strings.reminderTypeSnack;
       case ReminderType.supplement:
-        return 'Thực phẩm bổ sung';
+        return strings.reminderTypeSupplement;
       case ReminderType.other:
-        return 'Khác';
+        return strings.reminderTypeOther;
     }
   }
 
-  static String getRepeatText(RepeatType repeat) {
+  static String getRepeatText(RepeatType repeat, BuildContext context) {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
     switch (repeat) {
       case RepeatType.daily:
-        return 'Hàng ngày';
+        return strings.repeatDaily;
       case RepeatType.weekly:
-        return 'Hàng tuần';
+        return strings.repeatWeekly;
       case RepeatType.monthly:
-        return 'Hàng tháng';
+        return strings.repeatMonthly;
       case RepeatType.none:
-        return 'Một lần';
+        return strings.repeatNone;
     }
   }
 

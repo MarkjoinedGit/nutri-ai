@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/nutrition_info_model.dart';
+import '../providers/localization_provider.dart';
+import '../utils/app_strings.dart';
 
 class DailyNutritionSummaryWidget extends StatelessWidget {
   final NutritionInfo dailyTotal;
@@ -9,65 +12,78 @@ class DailyNutritionSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Daily Nutrition Summary',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Row(
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildNutrientSummaryItem(
-                    'Calories',
-                    dailyTotal.calories.toStringAsFixed(1),
-                    'kcal',
-                    Colors.red.shade400,
+                Text(
+                  strings.dailyNutritionSummary,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildNutrientSummaryItem(
-                    'Protein',
-                    dailyTotal.protein.toStringAsFixed(1),
-                    'g',
-                    Colors.blue.shade400,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildNutrientSummaryItem(
+                        strings.caloriesLabel,
+                        dailyTotal.calories.toStringAsFixed(1),
+                        strings.kcal,
+                        Colors.red.shade400,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildNutrientSummaryItem(
+                        strings.proteinLabel,
+                        dailyTotal.protein.toStringAsFixed(1),
+                        strings.grams,
+                        Colors.blue.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildNutrientSummaryItem(
+                        strings.carbsLabel,
+                        dailyTotal.carb.toStringAsFixed(1),
+                        strings.grams,
+                        Colors.green.shade400,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildNutrientSummaryItem(
+                        strings.fatLabel,
+                        dailyTotal.fat.toStringAsFixed(1),
+                        strings.grams,
+                        customOrange,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildNutrientSummaryItem(
-                    'Carbs',
-                    dailyTotal.carb.toStringAsFixed(1),
-                    'g',
-                    Colors.green.shade400,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildNutrientSummaryItem(
-                    'Fat',
-                    dailyTotal.fat.toStringAsFixed(1),
-                    'g',
-                    customOrange,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

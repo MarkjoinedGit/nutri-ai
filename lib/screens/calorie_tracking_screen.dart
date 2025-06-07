@@ -4,9 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
 import '../services/recipe_service.dart';
 import '../models/nutrition_info_model.dart';
 import '../utils/image_validation_util.dart';
+import '../utils/app_strings.dart';
 import '../providers/calorie_tracking_provider.dart';
 import '../widgets/daily_nutrition_summary_widget.dart';
 import '../widgets/meal_section_widget.dart';
@@ -84,6 +86,12 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   }
 
   Future<void> _getImage(ImageSource source, String mealType) async {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     try {
       setState(() {
         _currentMealType = mealType;
@@ -100,7 +108,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
       if (!imageFile.isValidImage) {
         setState(() {
-          _showError('The selected file is not a valid image.');
+          _showError(strings.invalidImageFile);
         });
         return;
       }
@@ -113,7 +121,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       _analyzeImage();
     } catch (e) {
       setState(() {
-        _showError('Failed to select image: ${e.toString()}');
+        _showError('${strings.failedToSelectImage}${e.toString()}');
       });
     }
   }
@@ -122,9 +130,15 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
     if (_image == null) return;
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     if (!userProvider.isLoggedIn || userProvider.currentUser == null) {
       setState(() {
-        _showError('User not logged in. Please log in again.');
+        _showError(strings.userNotLoggedIn);
       });
       return;
     }
@@ -150,7 +164,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
         setState(() {
           _isAnalyzing = false;
         });
-        _showError('Error analyzing nutrition: ${e.toString()}');
+        _showError('${strings.errorAnalyzingNutrition}${e.toString()}');
       }
     }
   }
@@ -158,22 +172,30 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   void _showFoodAnalysisDialog() {
     if (_nutritionInfo == null) return;
 
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add to ${_getMealTypeDisplayName(_currentMealType)}?'),
+          title: Text(
+            '${strings.addToMeal} ${_getMealTypeDisplayName(_currentMealType)}?',
+          ),
           content: FoodAnalysisWidget(nutritionInfo: _nutritionInfo!),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(strings.cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Add Food'),
+              child: Text(strings.addFood),
               onPressed: () {
                 _saveMealData(_currentMealType);
                 Navigator.of(context).pop();
@@ -186,15 +208,21 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   }
 
   String _getMealTypeDisplayName(String mealType) {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     switch (mealType) {
       case 'breakfast':
-        return 'Breakfast';
+        return strings.breakfast;
       case 'lunch':
-        return 'Lunch';
+        return strings.lunch;
       case 'dinner':
-        return 'Dinner';
+        return strings.dinner;
       case 'snack':
-        return 'Snacks';
+        return strings.snacks;
       default:
         return mealType;
     }
@@ -208,6 +236,11 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       listen: false,
     );
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
 
     if (userProvider.isLoggedIn && userProvider.currentUser != null) {
       await calorieProvider.addMealData(
@@ -226,7 +259,7 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Food added to ${_getMealTypeDisplayName(mealType)} successfully!',
+              '${strings.addFood} ${_getMealTypeDisplayName(mealType)} ${strings.foodAddedSuccessfully}',
             ),
             backgroundColor: Colors.green,
           ),
@@ -236,28 +269,36 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
   }
 
   void _showAddFoodOptionsForMeal(String mealType) {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Food to ${_getMealTypeDisplayName(mealType)}'),
-          content: const Text('Choose how you want to add food'),
+          title: Text(
+            '${strings.addFoodToMeal} ${_getMealTypeDisplayName(mealType)}',
+          ),
+          content: Text(strings.chooseHowToAddFood),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(strings.cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Camera'),
+              child: Text(strings.camera),
               onPressed: () {
                 Navigator.of(context).pop();
                 _getImage(ImageSource.camera, mealType);
               },
             ),
             TextButton(
-              child: const Text('Gallery'),
+              child: Text(strings.gallery),
               onPressed: () {
                 Navigator.of(context).pop();
                 _getImage(ImageSource.gallery, mealType);
@@ -275,6 +316,11 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       listen: false,
     );
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
 
     if (userProvider.isLoggedIn && userProvider.currentUser != null) {
       calorieProvider.removeMealItem(
@@ -285,8 +331,8 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Food item removed'),
+        SnackBar(
+          content: Text(strings.foodItemRemoved),
           backgroundColor: Colors.blue,
         ),
       );
@@ -295,101 +341,112 @@ class _CalorieTrackingScreenState extends State<CalorieTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final calorieProvider = Provider.of<CalorieTrackingProvider>(context);
+    return Consumer2<CalorieTrackingProvider, LocalizationProvider>(
+      builder: (context, calorieProvider, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Calorie Tracking',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_today, color: Colors.black87),
-            onPressed: () => _selectDate(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              strings.calorieTrackingInLine,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
               ),
-
-              const SizedBox(height: 16),
-
-              DailyNutritionSummaryWidget(
-                dailyTotal: calorieProvider.dailyTotal,
-              ),
-
-              const SizedBox(height: 24),
-
-              if (_isAnalyzing) ...[
-                const SizedBox(height: 24),
-                const Center(
-                  child: Column(
-                    children: [
-                      CircularProgressIndicator(color: customOrange),
-                      SizedBox(height: 16),
-                      Text('Analyzing food image...'),
-                    ],
-                  ),
-                ),
-              ],
-
-              MealSectionWidget(
-                title: 'Breakfast',
-                items: calorieProvider.breakfastItems,
-                onRemove: (index) => _removeItem('breakfast', index),
-                onAddPressed: () => _showAddFoodOptionsForMeal('breakfast'),
-              ),
-              const SizedBox(height: 16),
-              MealSectionWidget(
-                title: 'Lunch',
-                items: calorieProvider.lunchItems,
-                onRemove: (index) => _removeItem('lunch', index),
-                onAddPressed: () => _showAddFoodOptionsForMeal('lunch'),
-              ),
-              const SizedBox(height: 16),
-              MealSectionWidget(
-                title: 'Dinner',
-                items: calorieProvider.dinnerItems,
-                onRemove: (index) => _removeItem('dinner', index),
-                onAddPressed: () => _showAddFoodOptionsForMeal('dinner'),
-              ),
-              const SizedBox(height: 16),
-              MealSectionWidget(
-                title: 'Snacks',
-                items: calorieProvider.snackItems,
-                onRemove: (index) => _removeItem('snack', index),
-                onAddPressed: () => _showAddFoodOptionsForMeal('snack'),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0.5,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.calendar_today, color: Colors.black87),
+                onPressed: () => _selectDate(context),
               ),
             ],
           ),
-        ),
-      ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat(
+                            'EEEE, MMMM d, yyyy',
+                          ).format(_selectedDate),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  DailyNutritionSummaryWidget(
+                    dailyTotal: calorieProvider.dailyTotal,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  if (_isAnalyzing) ...[
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Column(
+                        children: [
+                          const CircularProgressIndicator(color: customOrange),
+                          const SizedBox(height: 16),
+                          Text(strings.analyzingFoodImage),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  MealSectionWidget(
+                    title: strings.breakfast,
+                    items: calorieProvider.breakfastItems,
+                    onRemove: (index) => _removeItem('breakfast', index),
+                    onAddPressed: () => _showAddFoodOptionsForMeal('breakfast'),
+                  ),
+                  const SizedBox(height: 16),
+                  MealSectionWidget(
+                    title: strings.lunch,
+                    items: calorieProvider.lunchItems,
+                    onRemove: (index) => _removeItem('lunch', index),
+                    onAddPressed: () => _showAddFoodOptionsForMeal('lunch'),
+                  ),
+                  const SizedBox(height: 16),
+                  MealSectionWidget(
+                    title: strings.dinner,
+                    items: calorieProvider.dinnerItems,
+                    onRemove: (index) => _removeItem('dinner', index),
+                    onAddPressed: () => _showAddFoodOptionsForMeal('dinner'),
+                  ),
+                  const SizedBox(height: 16),
+                  MealSectionWidget(
+                    title: strings.snacks,
+                    items: calorieProvider.snackItems,
+                    onRemove: (index) => _removeItem('snack', index),
+                    onAddPressed: () => _showAddFoodOptionsForMeal('snack'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../models/reminder_model.dart';
 import '../providers/reminder_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
 import '../widgets/reminder_dialog.dart';
 import '../utils/reminder_utils.dart';
+import '../utils/app_strings.dart';
 
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
@@ -60,116 +62,136 @@ class _RemindersScreenState extends State<RemindersScreen>
     sortedReminders.sort((a, b) {
       final timeA = ReminderUtils.parseReminderTime(a.time);
       final timeB = ReminderUtils.parseReminderTime(b.time);
-      return timeB.compareTo(timeA); // Sắp xếp từ mới -> cũ
+      return timeB.compareTo(timeA);
     });
     return sortedReminders;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Nhắc nhở',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.grey[200],
-        iconTheme: const IconThemeData(color: Colors.black87),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: customOrange,
-              unselectedLabelColor: Colors.grey[600],
-              indicatorColor: customOrange,
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(
+    return Consumer2<ReminderProvider, LocalizationProvider>(
+      builder: (context, reminderProvider, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            title: Text(
+              strings.reminders,
+              style: TextStyle(
+                color: Colors.black87,
                 fontWeight: FontWeight.w600,
-                fontSize: 16,
+                fontSize: 20,
               ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 16,
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            shadowColor: Colors.grey[200],
+            iconTheme: const IconThemeData(color: Colors.black87),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(56),
+              child: Container(
+                color: Colors.white,
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: customOrange,
+                  unselectedLabelColor: Colors.grey[600],
+                  indicatorColor: customOrange,
+                  indicatorWeight: 3,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 16,
+                  ),
+                  tabs: [
+                    Tab(
+                      icon: const Icon(Icons.notifications_active),
+                      text: strings.todayReminders,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.list_alt),
+                      text: strings.allReminders,
+                    ),
+                  ],
+                ),
               ),
-              tabs: const [
-                Tab(icon: Icon(Icons.notifications_active), text: 'Hôm nay'),
-                Tab(icon: Icon(Icons.list_alt), text: 'Tất cả'),
-              ],
             ),
           ),
-        ),
-      ),
-      body: Consumer<ReminderProvider>(
-        builder: (context, reminderProvider, child) {
-          if (reminderProvider.isLoading) {
-            return _buildLoadingState();
-          }
+          body: Consumer<ReminderProvider>(
+            builder: (context, reminderProvider, child) {
+              if (reminderProvider.isLoading) {
+                return _buildLoadingState();
+              }
 
-          if (reminderProvider.error != null) {
-            return _buildErrorState(reminderProvider.error!);
-          }
+              if (reminderProvider.error != null) {
+                return _buildErrorState(reminderProvider.error!);
+              }
 
-          final allReminders = _sortRemindersByNewest(
-            reminderProvider.reminders,
-          );
-          final todayReminders = _sortRemindersByNewest(
-            _getTodayReminders(allReminders),
-          );
+              final allReminders = _sortRemindersByNewest(
+                reminderProvider.reminders,
+              );
+              final todayReminders = _sortRemindersByNewest(
+                _getTodayReminders(allReminders),
+              );
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildRemindersList(
-                todayReminders,
-                reminderProvider,
-                isToday: true,
-              ),
-              _buildRemindersList(
-                allReminders,
-                reminderProvider,
-                isToday: false,
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateReminderDialog(),
-        backgroundColor: customOrange,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Tạo nhắc nhở',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        elevation: 4,
-        extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
-      ),
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildRemindersList(
+                    todayReminders,
+                    reminderProvider,
+                    isToday: true,
+                  ),
+                  _buildRemindersList(
+                    allReminders,
+                    reminderProvider,
+                    isToday: false,
+                  ),
+                ],
+              );
+            },
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => _showCreateReminderDialog(),
+            backgroundColor: customOrange,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add),
+            label: Text(
+              strings.createReminder,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            elevation: 4,
+            extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(color: customOrange),
-          SizedBox(height: 16),
-          Text(
-            'Đang tải nhắc nhở...',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: customOrange),
+              const SizedBox(height: 16),
+              Text(
+                strings.loadingReminders,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -221,6 +243,9 @@ class _RemindersScreenState extends State<RemindersScreen>
     final reminderTime = ReminderUtils.parseReminderTime(reminder.time);
     final isPast = reminderTime.isBefore(DateTime.now());
     final isUpcoming = isToday && reminderTime.isAfter(DateTime.now());
+    final strings = AppStrings.getStrings(
+      Provider.of<LocalizationProvider>(context, listen: false).currentLanguage,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -315,9 +340,9 @@ class _RemindersScreenState extends State<RemindersScreen>
                                   color: customOrange,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text(
-                                  'Sắp tới',
-                                  style: TextStyle(
+                                child: Text(
+                                  strings.upcomingReminders,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -400,7 +425,10 @@ class _RemindersScreenState extends State<RemindersScreen>
                             Icon(Icons.repeat, size: 12, color: customOrange),
                             const SizedBox(width: 4),
                             Text(
-                              ReminderUtils.getRepeatText(reminder.repeat),
+                              ReminderUtils.getRepeatText(
+                                reminder.repeat,
+                                context,
+                              ),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: customOrange,
@@ -464,128 +492,142 @@ class _RemindersScreenState extends State<RemindersScreen>
   }
 
   Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: Colors.red[400],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Có lỗi xảy ra',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadReminders,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: customOrange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    size: 64,
+                    color: Colors.red[400],
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 20),
+                Text(
+                  strings.errorOccurred,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.refresh),
-              label: const Text(
-                'Thử lại',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  error,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _loadReminders,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: customOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(
+                    strings.tryAgain,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildEmptyState(bool isToday) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: customOrange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                isToday
-                    ? Icons.today_outlined
-                    : Icons.notifications_none_rounded,
-                size: 64,
-                color: customOrange,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              isToday ? 'Không có nhắc nhở hôm nay' : 'Chưa có nhắc nhở nào',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isToday
-                  ? 'Hôm nay bạn không có nhắc nhở nào được đặt'
-                  : 'Tạo nhắc nhở đầu tiên của bạn để bắt đầu',
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            if (!isToday) ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => _showCreateReminderDialog(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: customOrange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: customOrange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  child: Icon(
+                    isToday
+                        ? Icons.today_outlined
+                        : Icons.notifications_none_rounded,
+                    size: 64,
+                    color: customOrange,
                   ),
                 ),
-                icon: const Icon(Icons.add),
-                label: const Text(
-                  'Tạo nhắc nhở',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                const SizedBox(height: 20),
+                Text(
+                  isToday ? strings.noRemindersToday : strings.noReminders,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-      ),
+                const SizedBox(height: 8),
+                Text(
+                  isToday
+                      ? strings.noRemindersSetToday
+                      : strings.createFirstReminder,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                if (!isToday) ...[
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => _showCreateReminderDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: customOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                      strings.createReminder,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -601,6 +643,11 @@ class _RemindersScreenState extends State<RemindersScreen>
   }
 
   void _showDeleteConfirmDialog(String reminderId, ReminderProvider provider) {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
     showDialog(
       context: context,
       builder:
@@ -608,18 +655,16 @@ class _RemindersScreenState extends State<RemindersScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
-              'Xác nhận xóa',
+            title: Text(
+              strings.confirmDelete,
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            content: const Text(
-              'Bạn có chắc chắn muốn xóa nhắc nhở này? Hành động này không thể hoàn tác.',
-            ),
+            content: Text(strings.areYouSureDeleteReminder),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
-                child: const Text('Hủy'),
+                child: Text(strings.cancel),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -632,11 +677,14 @@ class _RemindersScreenState extends State<RemindersScreen>
                     if (mounted) {
                       scaffoldMessenger.showSnackBar(
                         SnackBar(
-                          content: const Row(
+                          content: Row(
                             children: [
-                              Icon(Icons.check_circle, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Đã xóa nhắc nhở thành công'),
+                              const Icon(
+                                Icons.check_circle,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(strings.reminderDeletedSuccessfully),
                             ],
                           ),
                           backgroundColor: Colors.green,
@@ -655,7 +703,9 @@ class _RemindersScreenState extends State<RemindersScreen>
                             children: [
                               const Icon(Icons.error, color: Colors.white),
                               const SizedBox(width: 8),
-                              Expanded(child: Text('Lỗi: ${e.toString()}')),
+                              Expanded(
+                                child: Text('${strings.error} ${e.toString()}'),
+                              ),
                             ],
                           ),
                           backgroundColor: Colors.red,
@@ -675,9 +725,9 @@ class _RemindersScreenState extends State<RemindersScreen>
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Xóa',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  strings.delete,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ],

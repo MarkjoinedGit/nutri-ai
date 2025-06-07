@@ -88,7 +88,7 @@ class NotificationProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error loading notifications from storage: $e');
+      // Handle any errors that occur during loading
     }
   }
 
@@ -100,7 +100,7 @@ class NotificationProvider extends ChangeNotifier {
       );
       await prefs.setString(_storageKey, notificationsJson);
     } catch (e) {
-      print('Error saving notifications to storage: $e');
+      // Handle any errors that occur during saving
     }
   }
 

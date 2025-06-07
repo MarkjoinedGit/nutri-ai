@@ -101,7 +101,7 @@ class ReminderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      ReminderUtils.getRepeatText(reminder.repeat),
+                      ReminderUtils.getRepeatText(reminder.repeat, context),
                       style: const TextStyle(
                         fontSize: 12,
                         color: customOrange,

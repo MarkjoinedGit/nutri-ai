@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../models/reminder_model.dart';
 import '../providers/reminder_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/localization_provider.dart';
 import '../utils/reminder_utils.dart';
+import '../utils/app_strings.dart';
 
 class ReminderDialog extends StatefulWidget {
   final Reminder? reminder;
@@ -49,152 +51,201 @@ class _ReminderDialogState extends State<ReminderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.reminder == null ? 'Tạo nhắc nhở' : 'Chỉnh sửa nhắc nhở',
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTitleField(),
-                const SizedBox(height: 16),
-                _buildDescriptionField(),
-                const SizedBox(height: 16),
-                _buildTypeDropdown(),
-                const SizedBox(height: 16),
-                _buildDateTimeSelector(),
-                const SizedBox(height: 16),
-                _buildRepeatDropdown(),
-              ],
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return AlertDialog(
+          title: Text(
+            widget.reminder == null
+                ? strings.createReminder
+                : strings.editReminder,
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTitleField(),
+                    const SizedBox(height: 16),
+                    _buildDescriptionField(),
+                    const SizedBox(height: 16),
+                    _buildTypeDropdown(),
+                    const SizedBox(height: 16),
+                    _buildDateTimeSelector(),
+                    const SizedBox(height: 16),
+                    _buildRepeatDropdown(),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Hủy'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _saveReminder,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: customOrange,
-            foregroundColor: Colors.white,
-          ),
-          child:
-              _isLoading
-                  ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                  : Text(widget.reminder == null ? 'Tạo' : 'Cập nhật'),
-        ),
-      ],
+          actions: [
+            TextButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: Text(strings.cancel),
+            ),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _saveReminder,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: customOrange,
+                foregroundColor: Colors.white,
+              ),
+              child:
+                  _isLoading
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : Text(
+                        widget.reminder == null
+                            ? strings.create
+                            : strings.update,
+                      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildTitleField() {
-    return TextFormField(
-      controller: _titleController,
-      decoration: const InputDecoration(
-        labelText: 'Tiêu đề *',
-        border: OutlineInputBorder(),
-      ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Vui lòng nhập tiêu đề';
-        }
-        return null;
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return TextFormField(
+          controller: _titleController,
+          decoration: InputDecoration(
+            labelText: strings.title,
+            border: const OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return strings.pleaseEnterTitle;
+            }
+            return null;
+          },
+        );
       },
     );
   }
 
   Widget _buildDescriptionField() {
-    return TextFormField(
-      controller: _descriptionController,
-      decoration: const InputDecoration(
-        labelText: 'Mô tả',
-        border: OutlineInputBorder(),
-      ),
-      maxLines: 2,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return TextFormField(
+          controller: _descriptionController,
+          decoration: InputDecoration(
+            labelText: strings.description,
+            border: const OutlineInputBorder(),
+          ),
+          maxLines: 2,
+        );
+      },
     );
   }
 
   Widget _buildTypeDropdown() {
-    return DropdownButtonFormField<ReminderType>(
-      value: _selectedType,
-      decoration: const InputDecoration(
-        labelText: 'Loại nhắc nhở',
-        border: OutlineInputBorder(),
-      ),
-      items:
-          ReminderType.values.map((type) {
-            return DropdownMenuItem(
-              value: type,
-              child: Row(
-                children: [
-                  Icon(
-                    ReminderUtils.getReminderTypeIcon(type),
-                    color: ReminderUtils.getReminderTypeColor(type),
-                    size: 20,
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+
+        return DropdownButtonFormField<ReminderType>(
+          value: _selectedType,
+          decoration: InputDecoration(
+            labelText: strings.reminderType,
+            border: const OutlineInputBorder(),
+          ),
+          items:
+              ReminderType.values.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Row(
+                    children: [
+                      Icon(
+                        ReminderUtils.getReminderTypeIcon(type),
+                        color: ReminderUtils.getReminderTypeColor(type),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(ReminderUtils.getReminderTypeText(type, context)),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(ReminderUtils.getReminderTypeText(type)),
-                ],
-              ),
-            );
-          }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedType = value!;
-        });
+                );
+              }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedType = value!;
+            });
+          },
+        );
       },
     );
   }
 
   Widget _buildDateTimeSelector() {
-    return ListTile(
-      title: const Text('Thời gian'),
-      subtitle: Text(
-        ReminderUtils.formatDateTime(_selectedDateTime),
-        style: const TextStyle(color: customOrange),
-      ),
-      trailing: const Icon(Icons.access_time),
-      onTap: _selectDateTime,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey[400]!),
-      ),
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return ListTile(
+          title: Text(strings.reminderTime),
+          subtitle: Text(
+            ReminderUtils.formatDateTime(_selectedDateTime),
+            style: const TextStyle(color: customOrange),
+          ),
+          trailing: const Icon(Icons.access_time),
+          onTap: _selectDateTime,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: Colors.grey[400]!),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildRepeatDropdown() {
-    return DropdownButtonFormField<RepeatType>(
-      value: _selectedRepeat,
-      decoration: const InputDecoration(
-        labelText: 'Lặp lại',
-        border: OutlineInputBorder(),
-      ),
-      items:
-          RepeatType.values.map((repeat) {
-            return DropdownMenuItem(
-              value: repeat,
-              child: Text(ReminderUtils.getRepeatText(repeat)),
-            );
-          }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedRepeat = value!;
-        });
+    return Consumer<LocalizationProvider>(
+      builder: (context, localizationProvider, child) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        return DropdownButtonFormField<RepeatType>(
+          value: _selectedRepeat,
+          decoration: InputDecoration(
+            labelText: strings.repeat,
+            border: const OutlineInputBorder(),
+          ),
+          items:
+              RepeatType.values.map((repeat) {
+                return DropdownMenuItem(
+                  value: repeat,
+                  child: Text(ReminderUtils.getRepeatText(repeat, context)),
+                );
+              }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedRepeat = value!;
+            });
+          },
+        );
       },
     );
   }
@@ -248,6 +299,11 @@ class _ReminderDialogState extends State<ReminderDialog> {
   }
 
   Future<void> _saveReminder() async {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -262,7 +318,7 @@ class _ReminderDialogState extends State<ReminderDialog> {
       );
 
       if (userProvider.currentUser == null) {
-        throw Exception('Người dùng chưa đăng nhập');
+        throw Exception(strings.userNotLoggedIn);
       }
 
       final reminder = Reminder(
@@ -293,17 +349,17 @@ class _ReminderDialogState extends State<ReminderDialog> {
           SnackBar(
             content: Text(
               widget.reminder == null
-                  ? 'Đã tạo nhắc nhở thành công'
-                  : 'Đã cập nhật nhắc nhở thành công',
+                  ? strings.reminderCreatedSuccessfully
+                  : strings.reminderUpdatedSuccessfully,
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${strings.error}: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) {

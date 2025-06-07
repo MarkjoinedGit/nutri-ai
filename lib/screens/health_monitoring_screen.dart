@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/user_provider.dart';
 import '../providers/medical_record_provider.dart';
+import '../providers/localization_provider.dart';
 import '../models/medical_record_model.dart';
 import '../widgets/medical_record_card.dart';
 import '../widgets/edit_medical_record_dialog.dart';
 import '../widgets/processing_medical_record_dialog.dart';
+import '../utils/app_strings.dart';
 
 class HealthMonitoringScreen extends StatefulWidget {
   const HealthMonitoringScreen({super.key});
@@ -34,7 +36,14 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       final userId = userProvider.currentUser?.id;
 
       if (userId == null) {
-        throw Exception('User not logged in');
+        final localizationProvider = Provider.of<LocalizationProvider>(
+          context,
+          listen: false,
+        );
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        throw Exception(strings.userNotLoggedIn);
       }
 
       final recordProvider = Provider.of<MedicalRecordProvider>(
@@ -68,8 +77,17 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final localizationProvider = Provider.of<LocalizationProvider>(
+          context,
+          listen: false,
+        );
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: ${e.toString()}')),
+          SnackBar(
+            content: Text('${strings.errorPickingImage}: ${e.toString()}'),
+          ),
         );
       }
     }
@@ -78,9 +96,16 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
   Future<void> _uploadMedicalRecord() async {
     if (_selectedImage == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image first')),
+        final localizationProvider = Provider.of<LocalizationProvider>(
+          context,
+          listen: false,
         );
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(strings.pleaseSelectImageFirst)));
       }
       return;
     }
@@ -94,7 +119,14 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       final userId = userProvider.currentUser?.id;
 
       if (userId == null) {
-        throw Exception('User not logged in');
+        final localizationProvider = Provider.of<LocalizationProvider>(
+          context,
+          listen: false,
+        );
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
+        throw Exception(strings.userNotLoggedIn);
       }
 
       final recordProvider = Provider.of<MedicalRecordProvider>(
@@ -128,24 +160,34 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
   void _showConfirmationDialog(MedicalRecord record) {
     if (!mounted) return;
 
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Medical Record Processed'),
+            title: Text(strings.medicalRecordProcessed),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Patient Name: ${record.patientName}'),
-                  Text('Age: ${record.age}'),
-                  Text('Gender: ${record.gender}'),
-                  Text('Admission Date: ${record.admissionDatetime}'),
-                  Text('Reason: ${record.reasonForAdmission}'),
-                  Text('Preliminary Diagnosis: ${record.preliminaryDiagnosis}'),
-                  Text('Confirmed Diagnosis: ${record.confirmedDiagnosis}'),
-                  Text('Treatment Plan: ${record.treatmentPlan}'),
+                  Text('${strings.patientName}: ${record.patientName}'),
+                  Text('${strings.age}: ${record.age}'),
+                  Text('${strings.gender}: ${record.gender}'),
+                  Text('${strings.admissionDate}: ${record.admissionDatetime}'),
+                  Text('${strings.reason}: ${record.reasonForAdmission}'),
+                  Text(
+                    '${strings.preliminaryDiagnosis}: ${record.preliminaryDiagnosis}',
+                  ),
+                  Text(
+                    '${strings.confirmedDiagnosis}: ${record.confirmedDiagnosis}',
+                  ),
+                  Text('${strings.treatmentPlan}: ${record.treatmentPlan}'),
                 ],
               ),
             ),
@@ -155,14 +197,14 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                   Navigator.of(context).pop();
                   _showEditDialog(record);
                 },
-                child: const Text('Edit'),
+                child: Text(strings.edit),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   _fetchMedicalRecords();
                 },
-                child: const Text('Confirm'),
+                child: Text(strings.confirm),
               ),
             ],
           ),
@@ -194,8 +236,15 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
       final success = await recordProvider.updateMedicalRecord(record);
 
       if (success && mounted) {
+        final localizationProvider = Provider.of<LocalizationProvider>(
+          context,
+          listen: false,
+        );
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Medical record updated successfully')),
+          SnackBar(content: Text(strings.medicalRecordUpdatedSuccessfully)),
         );
       }
     } catch (e) {
@@ -218,8 +267,11 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MedicalRecordProvider>(
-      builder: (context, recordProvider, _) {
+    return Consumer2<MedicalRecordProvider, LocalizationProvider>(
+      builder: (context, recordProvider, localizationProvider, _) {
+        final strings = AppStrings.getStrings(
+          localizationProvider.currentLanguage,
+        );
         final isLoading = recordProvider.isLoading;
         final records = recordProvider.records;
         final error = recordProvider.error;
@@ -236,9 +288,9 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
           children: [
             Scaffold(
               appBar: AppBar(
-                title: const Text(
-                  'Health Monitoring',
-                  style: TextStyle(
+                title: Text(
+                  strings.healthMonitoringInLine,
+                  style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w600,
                   ),
@@ -255,9 +307,9 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                           Expanded(
                             child:
                                 records.isEmpty
-                                    ? const Center(
+                                    ? Center(
                                       child: Text(
-                                        'No medical records found. Upload your first medical record.',
+                                        strings.noMedicalRecordsFound,
                                         textAlign: TextAlign.center,
                                       ),
                                     )
@@ -308,11 +360,11 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                                           ),
                                         ),
                                       ),
-                                      const Padding(
-                                        padding: EdgeInsets.all(16),
+                                      Padding(
+                                        padding: const EdgeInsets.all(16),
                                         child: Text(
-                                          'Select Image Source',
-                                          style: TextStyle(
+                                          strings.selectImageSource,
+                                          style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -334,9 +386,9 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                                             color: customOrange,
                                           ),
                                         ),
-                                        title: const Text('Take a photo'),
-                                        subtitle: const Text(
-                                          'Capture with camera',
+                                        title: Text(strings.takeAPhoto),
+                                        subtitle: Text(
+                                          strings.captureWithCamera,
                                         ),
                                         onTap: () {
                                           Navigator.pop(context);
@@ -359,11 +411,9 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                                             color: customOrange,
                                           ),
                                         ),
-                                        title: const Text(
-                                          'Choose from gallery',
-                                        ),
-                                        subtitle: const Text(
-                                          'Select from photos',
+                                        title: Text(strings.chooseFromGallery),
+                                        subtitle: Text(
+                                          strings.selectFromPhotos,
                                         ),
                                         onTap: () {
                                           Navigator.pop(context);
@@ -376,9 +426,9 @@ class _HealthMonitoringScreenState extends State<HealthMonitoringScreen> {
                                 ),
                           );
                         },
-                        label: const Text(
-                          'Upload Medical Record',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                        label: Text(
+                          strings.uploadMedicalRecord,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         icon: const Icon(Icons.add),
                         backgroundColor: customOrange,
