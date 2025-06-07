@@ -4,7 +4,6 @@ import './notification_screen.dart';
 import '../widgets/dashboard_home_widget.dart';
 import '../widgets/user_profile_widget.dart';
 import '../services/auth_service.dart';
-import '../services/notification_service.dart';
 import '../providers/user_provider.dart';
 import '../providers/localization_provider.dart';
 import '../providers/notification_provider.dart';
@@ -276,20 +275,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             unselectedItemColor: Colors.grey,
             onTap: _onItemTapped,
           ),
-          floatingActionButton:
-              _selectedIndex == 0
-                  ? FloatingActionButton(
-                    onPressed: () {
-                      NotificationService().showInstantNotification(
-                        id: DateTime.now().millisecondsSinceEpoch,
-                        title: strings.testNotification,
-                        body: strings.testNotificationBody,
-                      );
-                    },
-                    backgroundColor: customOrange,
-                    child: const Icon(Icons.add_alert, color: Colors.white),
-                  )
-                  : null,
         );
       },
     );
