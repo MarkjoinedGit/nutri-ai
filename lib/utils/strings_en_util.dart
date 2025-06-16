@@ -251,6 +251,14 @@ class StringsEn {
   String get errorGeneratingRecipe => "Error generating recipe:";
   String get noImageSelected => "No image selected";
   String get analyzingImage => "Analyzing image...";
+  String get recipeGenerated => "Generating recipe...";
+  String get recognizedDish => "Recognized dish";
+  String get editDishName => "Edit dish name";
+  String get confirmDishName =>
+      "Confirm the dish name or edit it before generating the recipe.";
+  String get confirmDishNameShort => "Confirm dish name";
+  String get weRecognizedThisDishAs => "We recognized this dish as:";
+  String get dishName => "Dish name";
 
   // Nutrition Information Widget
   String get nutritionInformation => "Nutrition Information";
