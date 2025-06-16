@@ -49,11 +49,11 @@ class RecipeService {
     }
   }
 
-  Future<String> getRecipe(File image, String userId) async {
+  Future<String> getDishName(File image) async {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/features/NutriRecipes'),
+        Uri.parse('$baseUrl/features/NutriRecipes/GetDish'),
       );
 
       final mimeType = lookupMimeType(image.path);
@@ -61,14 +61,42 @@ class RecipeService {
         throw Exception('The selected file is not a valid image.');
       }
 
-      request.fields['id_user'] = userId;
-
       var multipartFile = await http.MultipartFile.fromPath(
         'file',
         image.path,
         contentType: MediaType.parse(mimeType),
       );
       request.files.add(multipartFile);
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201) {
+        Map<String, dynamic> data = json.decode(
+          utf8.decode(response.bodyBytes),
+        );
+        return data['result'] ?? '';
+      } else {
+        Map<String, dynamic> errorData = json.decode(
+          utf8.decode(response.bodyBytes),
+        );
+        throw Exception(errorData['error'] ?? 'Failed to detect dish name.');
+      }
+    } catch (e) {
+      throw Exception('Error detecting dish: ${e.toString()}');
+    }
+  }
+
+  Future<String> generateRecipe(String userId, String dishName) async {
+    print('Generating recipe for dish: $dishName');
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/features/NutriRecipes/GenRecipe'),
+      );
+
+      request.fields['id_user'] = userId;
+      request.fields['name_dish'] = dishName;
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);

@@ -24,8 +24,10 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
   File? _image;
   bool _isAnalyzing = false;
   bool _isLoadingNutrition = false;
+  bool _isLoadingDish = false;
   bool _isLoadingRecipe = false;
   NutritionInfo? _nutritionInfo;
+  String? _dishName;
   String? _recipeResult;
   String? _errorMessage;
 
@@ -58,6 +60,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       setState(() {
         _image = imageFile;
         _nutritionInfo = null;
+        _dishName = null;
         _recipeResult = null;
         _errorMessage = null;
       });
@@ -89,13 +92,13 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
     setState(() {
       _isAnalyzing = true;
       _isLoadingNutrition = true;
-      _isLoadingRecipe = true;
+      _isLoadingDish = true;
       _errorMessage = null;
     });
 
     final recipeService = RecipeService();
-    final userId = userProvider.currentUser!.id;
 
+    // Analyze nutrition info
     try {
       final nutritionInfo = await recipeService.getNutritionInfo(_image!);
       if (mounted) {
@@ -113,27 +116,152 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
       }
     }
 
+    // Recognize dish name
     try {
-      final recipeResult = await recipeService.getRecipe(_image!, userId);
+      final dishName = await recipeService.getDishName(_image!);
       if (mounted) {
         setState(() {
-          _recipeResult = recipeResult;
-          _isLoadingRecipe = false;
+          _dishName = dishName;
+          _isLoadingDish = false;
         });
+
+        // Show confirmation dialog after getting dish name
+        _showDishConfirmationDialog(dishName);
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = '${strings.errorGeneratingRecipe} ${e.toString()}';
-          _isLoadingRecipe = false;
+          _errorMessage = 'Error recognizing dish: ${e.toString()}';
+          _isLoadingDish = false;
         });
       }
     }
 
     if (mounted) {
       setState(() {
-        _isAnalyzing = _isLoadingNutrition || _isLoadingRecipe;
+        _isAnalyzing = _isLoadingNutrition || _isLoadingDish;
       });
+    }
+  }
+
+  Future<void> _showDishConfirmationDialog(String recognizedDishName) async {
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
+    final TextEditingController dishController = TextEditingController(
+      text: recognizedDishName,
+    );
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(strings.confirmDishNameShort),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.weRecognizedThisDishAs,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: dishController,
+                decoration: InputDecoration(
+                  labelText: strings.dishName,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                maxLines: 1,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                strings.confirmDishName,
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(strings.cancel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: customOrange,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(strings.recipeGenerated),
+              onPressed: () {
+                final confirmedDishName = dishController.text.trim();
+                Navigator.of(context).pop();
+                if (confirmedDishName.isNotEmpty) {
+                  _generateRecipe(confirmedDishName);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _generateRecipe(String confirmedDishName) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final localizationProvider = Provider.of<LocalizationProvider>(
+      context,
+      listen: false,
+    );
+    final strings = AppStrings.getStrings(localizationProvider.currentLanguage);
+
+    if (!userProvider.isLoggedIn || userProvider.currentUser == null) {
+      setState(() {
+        _errorMessage = strings.userNotLoggedIn;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingRecipe = true;
+      _isAnalyzing = true;
+      _errorMessage = null;
+    });
+
+    final recipeService = RecipeService();
+    final userId = userProvider.currentUser!.id;
+
+    try {
+      final recipeResult = await recipeService.generateRecipe(
+        userId,
+        confirmedDishName,
+      );
+      if (mounted) {
+        setState(() {
+          _recipeResult = recipeResult;
+          _isLoadingRecipe = false;
+          _isAnalyzing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error generating recipe: ${e.toString()}';
+          _isLoadingRecipe = false;
+          _isAnalyzing = false;
+        });
+      }
     }
   }
 
@@ -239,7 +367,11 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
                         children: [
                           const CircularProgressIndicator(color: customOrange),
                           const SizedBox(height: 16),
-                          Text(strings.analyzingImage),
+                          Text(
+                            _isLoadingRecipe
+                                ? strings.recipeGenerated
+                                : strings.analyzingImage,
+                          ),
                         ],
                       ),
                     ),

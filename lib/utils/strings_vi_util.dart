@@ -14,10 +14,10 @@ class StringsVi {
   String get noUserData => "Không có dữ liệu người dùng";
 
   // Features
-  String get chatConsultation => "Tư vấn\nTrực tuyến";
+  String get chatConsultation => "Tư vấn\nVới AI";
   String get recipeRecognition => "Nhận diện\nCông thức";
   String get calorieTracking => "Theo dõi\nCalo";
-  String get healthMonitoring => "Giám sát\nSức khỏe";
+  String get healthMonitoring => "Theo dõi\nBệnh án";
   String get reminders => "Nhắc nhở";
   String get mealPlans => "Kế hoạch\nBữa ăn";
 
@@ -38,7 +38,7 @@ class StringsVi {
   String get english => "English";
 
   // User
-  String get healthRecords => "Giám sát sức khỏe";
+  String get healthRecords => "Theo dõi bệnh án";
 
   // Login Screen
   String get welcomeBack => "Chào mừng trở lại";
@@ -130,7 +130,7 @@ class StringsVi {
   String get resendCode => "Gửi lại mã?";
 
   // Calorie Tracking Screen
-  String get calorieTrackingInLine => "Theo dõi calo";
+  String get calorieTrackingInLine => "Theo dõi dinh dưỡng";
   String get analyzingFoodImage => 'Đang phân tích hình ảnh thức ăn...';
   String get breakfast => 'Bữa Sáng';
   String get lunch => 'Bữa Trưa';
@@ -171,7 +171,7 @@ class StringsVi {
   String get fatLabel => 'Chất Béo';
 
   // Chat Consultant Screen
-  String get chatConsultationInLIne => "Tư vấn trực tuyến";
+  String get chatConsultationInLIne => "Tư vấn với AI";
 
   String get newConversation => 'Cuộc trò chuyện mới';
   String get viewConversationHistory => 'Xem lịch sử trò chuyện';
@@ -249,6 +249,13 @@ class StringsVi {
   String get errorGeneratingRecipe => "Lỗi khi tạo công thức:";
   String get noImageSelected => "Chưa chọn ảnh";
   String get analyzingImage => "Đang phân tích ảnh...";
+  String get recipeGenerated => "Tạo công thức món ăn...";
+  String get recognizedDish => "Món ăn đã nhận diện";
+  String get editDishName => "Chỉnh sửa tên món ăn";
+  String get confirmDishName => "Xác nhận tên món ăn hoặc chỉnh sửa trước khi tạo công thức.";
+  String get confirmDishNameShort => "Xác nhận tên món ăn";
+  String get weRecognizedThisDishAs => "Chúng tôi đã nhận diện món ăn này là:";
+  String get dishName => "Tên món ăn";
 
   // Nutrition Information Widget
   String get nutritionInformation => "Thông tin dinh dưỡng";
