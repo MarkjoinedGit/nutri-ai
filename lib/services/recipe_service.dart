@@ -88,7 +88,6 @@ class RecipeService {
   }
 
   Future<String> generateRecipe(String userId, String dishName) async {
-    print('Generating recipe for dish: $dishName');
     try {
       var request = http.MultipartRequest(
         'POST',

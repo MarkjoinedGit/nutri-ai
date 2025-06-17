@@ -27,6 +27,7 @@ class _RecipeRecognitionScreenState extends State<RecipeRecognitionScreen> {
   bool _isLoadingDish = false;
   bool _isLoadingRecipe = false;
   NutritionInfo? _nutritionInfo;
+  // ignore: unused_field
   String? _dishName;
   String? _recipeResult;
   String? _errorMessage;

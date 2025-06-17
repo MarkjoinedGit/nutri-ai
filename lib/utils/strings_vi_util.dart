@@ -16,7 +16,7 @@ class StringsVi {
   // Features
   String get chatConsultation => "Tư vấn\nVới AI";
   String get recipeRecognition => "Nhận diện\nCông thức";
-  String get calorieTracking => "Theo dõi\nCalo";
+  String get calorieTracking => "Theo dõi\nDinh dưỡng";
   String get healthMonitoring => "Theo dõi\nBệnh án";
   String get reminders => "Nhắc nhở";
   String get mealPlans => "Kế hoạch\nBữa ăn";
@@ -195,7 +195,7 @@ class StringsVi {
   String get consultationDeleted => 'Đã xóa cuộc tư vấn';
 
   // Health Monitoring Screen
-  String get healthMonitoringInLine => "Theo Dõi Sức Khỏe";
+  String get healthMonitoringInLine => "Theo Dõi Bệnh Án";
   String get noMedicalRecordsFound =>
       "Không tìm thấy bệnh án nào. Tải lên bệnh án đầu tiên của bạn.";
   String get uploadMedicalRecord => "Tải Lên Bệnh Án";
@@ -252,7 +252,8 @@ class StringsVi {
   String get recipeGenerated => "Tạo công thức món ăn...";
   String get recognizedDish => "Món ăn đã nhận diện";
   String get editDishName => "Chỉnh sửa tên món ăn";
-  String get confirmDishName => "Xác nhận tên món ăn hoặc chỉnh sửa trước khi tạo công thức.";
+  String get confirmDishName =>
+      "Xác nhận tên món ăn hoặc chỉnh sửa trước khi tạo công thức.";
   String get confirmDishNameShort => "Xác nhận tên món ăn";
   String get weRecognizedThisDishAs => "Chúng tôi đã nhận diện món ăn này là:";
   String get dishName => "Tên món ăn";
